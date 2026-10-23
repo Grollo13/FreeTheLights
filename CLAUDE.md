@@ -208,7 +208,7 @@ SimHub LED editor → Effect/FreeTheLightsEffect (LED strips) or FreeTheLightsMa
 
 ## Not yet verified in a running SimHub
 These assumptions still need a check in a live SimHub session with a game:
-- whether `DataUpdate` runs while no game is running (the test buttons and the idle animation depend on it; without it, the frame age check also turns the static colors off outside a game)
+- whether `DataUpdate` runs while no game is running (the test buttons depend on it; without it, the frame age check also turns the static colors off outside a game)
 - the units of `SpotterCarLeftDistance` and `SpotterCarRightDistance` (assumed meters)
 - how the wizard dialog and mouse drag & drop behave inside SimHub
 - the matrix effect on a real LED flag device
@@ -217,7 +217,6 @@ These assumptions still need a check in a live SimHub session with a game:
 - dragging LEDs in the LED positions dialog inside SimHub
 - the effect's part picker in SimHub's LED editor
 - the preview's click selection and the inspector panel inside SimHub (mouse input through the preview's `Viewbox`, keyboard focus, Ctrl/Shift-click)
-- engine start/stop and the pit limiter: which games report `EngineStarted` and `PitLimiterOn` (engine running is `EngineStarted` or RPM above 0), and whether a stop is seen in time while the RPM spins down
 - the iRacing debris flag: that `DataCorePlugin.GameRawData.Telemetry.SessionFlags` exists under that name while iRacing runs and converts to a number
 - the wiring test pattern on real hardware (it also depends on `DataUpdate` running outside a game)
 - press colors: that `PluginManager.InputPressed`/`InputReleased` fire for wheel buttons and encoder steps of real wheels, the input names they carry, that capturing an input in the inspector works inside SimHub, and whether 50 ms is a good minimum on-time for dial steps
