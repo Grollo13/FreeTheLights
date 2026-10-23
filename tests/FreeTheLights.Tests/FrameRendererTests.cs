@@ -672,6 +672,25 @@ namespace FreeTheLights.Tests
         }
 
         [Fact]
+        public void Pit_limiter_alternates_groups_of_neighboring_leds()
+        {
+            var part = PitRow(PitLimiterAnimation.Alternate);
+            var on = new TelemetrySnapshot { PitLimiter = true };
+
+            part.PitLimiter.AlternateGroupSize = 2;
+            Assert.Equal(new[] { Red, Red, White, White, Red, Red, White, White }, FrameRenderer.Render(part, on, null, 50));
+            Assert.Equal(new[] { White, White, Red, Red, White, White, Red, Red }, FrameRenderer.Render(part, on, null, 150));
+
+            part.PitLimiter.AlternateGroupSize = 3;
+            Assert.Equal(new[] { Red, Red, Red, White, White, White, Red, Red }, FrameRenderer.Render(part, on, null, 50));
+
+            // From the center: groups count outwards, the same on both sides.
+            part.PitLimiter.AlternateGroupSize = 1;
+            part.PitLimiter.Mirror = true;
+            Assert.Equal(new[] { White, Red, White, Red, Red, White, Red, White }, FrameRenderer.Render(part, on, null, 50));
+        }
+
+        [Fact]
         public void Pit_limiter_stripes_march_along()
         {
             var part = PitRow(PitLimiterAnimation.Scroll);

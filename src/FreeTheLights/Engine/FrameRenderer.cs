@@ -485,6 +485,7 @@ namespace FreeTheLights.Engine
                 Color = LedColor.ParseCached(settings.Color),
                 Color2 = color2.IsTransparent ? LedColor.Off : color2,
                 Steps = nowMs / settings.IntervalMs,
+                GroupSize = settings.AlternateGroupSize,
             };
             Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
         }
@@ -498,14 +499,20 @@ namespace FreeTheLights.Engine
             /// <summary>Intervals passed so far.</summary>
             public long Steps;
 
+            /// <summary><see cref="PitLimiterSettings.AlternateGroupSize"/>: neighboring LEDs that alternate together, 0 = halves.</summary>
+            public int GroupSize;
+
             public LedColor Sample(double position, double step)
             {
                 bool first;
                 switch (Animation)
                 {
                     case PitLimiterAnimation.Alternate:
-                        first = position < 0.5 == (Steps % 2 == 0);
+                    {
+                        var firstGroup = GroupSize <= 0 ? position < 0.5 : (long)Math.Floor(position / step) / GroupSize % 2 == 0;
+                        first = firstGroup == (Steps % 2 == 0);
                         break;
+                    }
                     case PitLimiterAnimation.Scroll:
                     {
                         // The stripes move one LED per interval, towards the end.

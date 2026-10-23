@@ -456,7 +456,7 @@ namespace FreeTheLights.Settings
         /// <summary>All LEDs switch between color 1 and color 2.</summary>
         Blink = 0,
 
-        /// <summary>The two halves of the LEDs swap color 1 and color 2.</summary>
+        /// <summary>Groups of neighboring LEDs (or the two halves) swap color 1 and color 2.</summary>
         Alternate = 1,
 
         /// <summary>Stripes of color 1 and color 2 march along the LEDs.</summary>
@@ -470,8 +470,15 @@ namespace FreeTheLights.Settings
         private string color = "#FF0060FF";
         private string color2 = string.Empty;
         private int intervalMs = 250;
+        private int alternateGroupSize;
 
         public PitLimiterAnimation Animation { get => animation; set => Set(ref animation, value); }
+
+        /// <summary>
+        /// <see cref="PitLimiterAnimation.Alternate"/>: how many neighboring LEDs light up together, the next ones in the
+        /// other color; 0 = the two halves.
+        /// </summary>
+        public int AlternateGroupSize { get => alternateGroupSize; set => Set(ref alternateGroupSize, Math.Max(0, Math.Min(LedLimits.MaxLeds, value))); }
 
         /// <summary>Color 1.</summary>
         public string Color { get => color; set => Set(ref color, value); }

@@ -1000,22 +1000,29 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
                                             <TextBlock Style="{StaticResource Text.Label}" Text="Animation" />
                                             <ComboBox Grid.Column="1" Width="140" Margin="0,0,0,8" HorizontalAlignment="Left" SelectedItem="{Binding Part.PitLimiter.Animation}"
                                                       ItemsSource="{Binding DataContext.PitLimiterAnimations, ElementName=Root}" ItemTemplate="{StaticResource EnumItemTemplate}"
-                                                      ToolTip="Blink: all LEDs switch colors. Alternate: the two halves swap colors. Scroll: stripes march along the LEDs." />
-                                            <TextBlock Grid.Row="1" Style="{StaticResource Text.Label}" Text="Colors" />
-                                            <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,8" Orientation="Horizontal">
+                                                      ToolTip="Blink: all LEDs switch colors. Alternate: groups of LEDs swap colors. Scroll: stripes march along the LEDs." />
+                                            <TextBlock Grid.Row="1" Style="{StaticResource Text.Label}" Text="LEDs together"
+                                                       IsEnabled="{Binding Part.PitLimiter.Animation, Converter={StaticResource EnumEquals}, ConverterParameter=Alternate}" />
+                                            <mah:NumericUpDown Grid.Row="1" Grid.Column="1" Width="140" Margin="0,0,0,8" Minimum="0" Maximum="100" Interval="1" Value="{Binding Part.PitLimiter.AlternateGroupSize}"
+                                                               IsEnabled="{Binding Part.PitLimiter.Animation, Converter={StaticResource EnumEquals}, ConverterParameter=Alternate}"
+                                                               ToolTip="How many neighboring LEDs light up together, the next ones in the other color" />
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="10,0,0,8" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="0 = halves" />
+                                            <TextBlock Grid.Row="2" Style="{StaticResource Text.Label}" Text="Colors" />
+                                            <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,8" Orientation="Horizontal">
                                                 <ui:ColorPickerButton ColorHex="{Binding Part.PitLimiter.Color}" ToolTip="First color" />
                                                 <ui:ColorPickerButton Margin="10,0,0,0" ColorHex="{Binding Part.PitLimiter.Color2}" AllowNone="True" ToolTip="Second color (none = dark)" />
                                             </StackPanel>
-                                            <TextBlock Grid.Row="2" Style="{StaticResource Text.Label}" Text="Speed" />
-                                            <mah:NumericUpDown Grid.Row="2" Grid.Column="1" Width="140" Margin="0,0,0,8" Minimum="50" Maximum="2000" Interval="10" Value="{Binding Part.PitLimiter.IntervalMs}"
+                                            <TextBlock Grid.Row="3" Style="{StaticResource Text.Label}" Text="Speed" />
+                                            <mah:NumericUpDown Grid.Row="3" Grid.Column="1" Width="140" Margin="0,0,0,8" Minimum="50" Maximum="2000" Interval="10" Value="{Binding Part.PitLimiter.IntervalMs}"
                                                                ToolTip="How long each step of the animation lasts" />
-                                            <TextBlock Grid.Row="2" Grid.Column="2" Margin="10,0,0,8" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms per step" />
-                                            <CheckBox Grid.Row="3" Grid.ColumnSpan="3" Style="{StaticResource Switch}" IsChecked="{Binding Part.PitLimiter.Mirror}" Content="From the center"
-                                                      ToolTip="Alternate center and outside, or scroll outwards from the center" />
+                                            <TextBlock Grid.Row="3" Grid.Column="2" Margin="10,0,0,8" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms per step" />
+                                            <CheckBox Grid.Row="4" Grid.ColumnSpan="3" Style="{StaticResource Switch}" IsChecked="{Binding Part.PitLimiter.Mirror}" Content="From the center"
+                                                      ToolTip="Count the groups from the center outwards, or scroll outwards from the center" />
                                         </Grid>
                                     </StackPanel>
                                 </Border>
