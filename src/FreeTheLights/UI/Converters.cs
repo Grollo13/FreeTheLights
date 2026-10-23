@@ -117,6 +117,7 @@ namespace FreeTheLights.UI
                 case LayerKind.StaticColor: return PackIconMaterialKind.Palette;
                 case LayerKind.Press: return PackIconMaterialKind.GestureTapButton;
                 case LayerKind.Idle: return PackIconMaterialKind.Sleep;
+                case LayerKind.Engine: return PackIconMaterialKind.Engine;
                 default: return PackIconMaterialKind.Layers;
             }
         }

@@ -532,5 +532,98 @@ namespace FreeTheLights.Tests
             tests.Apply(forced, null, 0);
             Assert.True(forced.Idle);
         }
+
+        // ---------- Engine start and stop ----------
+
+        private static readonly LedColor Green = LedColor.FromRgb(0, 255, 0);
+
+        /// <summary>A part with one row of ten LEDs and only the engine animations on (1 s, start green, stop red).</summary>
+        private static DevicePart EngineRow(EngineAnimation start, EngineAnimation stop)
+        {
+            var part = new DevicePart();
+            part.EnsureDefaults();
+            part.AddGroup(new LedGroup { Kind = LedGroupKind.HorizontalRow, Count = 10 });
+            foreach (var feature in part.Features) feature.Enabled = feature == part.Engine;
+            part.Engine.StartAnimation = start;
+            part.Engine.StartColor = "#FF00FF00";
+            part.Engine.StopAnimation = stop;
+            part.Engine.StopColor = "#FFFF0000";
+            part.Engine.DurationMs = 1000;
+            return part;
+        }
+
+        private static int LitCount(LedColor[] frame) => frame.Count(c => !c.IsTransparent && !c.Equals(LedColor.Off));
+
+        [Fact]
+        public void Engine_start_sweeps_up_and_down_for_its_duration()
+        {
+            var part = EngineRow(EngineAnimation.Sweep, EngineAnimation.Drain);
+            var t = new TelemetrySnapshot { EngineStartedAtMs = 10000 };
+
+            Assert.All(FrameRenderer.Render(part, t, null, 9999), c => Assert.True(c.IsTransparent));
+            Assert.Equal(0, LitCount(FrameRenderer.Render(part, t, null, 10000)));
+            var quarter = FrameRenderer.Render(part, t, null, 10250);
+            Assert.Equal(5, LitCount(quarter));
+            Assert.Equal(Green, quarter[0]);
+            Assert.Equal(LedColor.Off, quarter[9]);
+            Assert.Equal(10, LitCount(FrameRenderer.Render(part, t, null, 10500)));
+            Assert.Equal(5, LitCount(FrameRenderer.Render(part, t, null, 10750)));
+            Assert.All(FrameRenderer.Render(part, t, null, 11000), c => Assert.True(c.IsTransparent));
+        }
+
+        [Fact]
+        public void The_later_of_start_and_stop_plays()
+        {
+            var part = EngineRow(EngineAnimation.Fade, EngineAnimation.Drain);
+            var t = new TelemetrySnapshot { EngineStartedAtMs = 10000, EngineStoppedAtMs = 10200 };
+
+            // Drain: all lit at first, emptying towards the start.
+            var frame = FrameRenderer.Render(part, t, null, 10200 + 300);
+            Assert.Equal(7, LitCount(frame));
+            Assert.Equal(Red, frame[0]);
+            Assert.Equal(LedColor.Off, frame[9]);
+
+            t.EngineStartedAtMs = 10400;
+            var fade = FrameRenderer.Render(part, t, null, 10400 + 250);
+            Assert.All(fade, c => Assert.Equal(Green.Scale(0.75), c));
+        }
+
+        [Fact]
+        public void Engine_flash_and_fill()
+        {
+            var flash = EngineRow(EngineAnimation.Flash, EngineAnimation.Off);
+            var t = new TelemetrySnapshot { EngineStartedAtMs = 0 };
+            Assert.Equal(10, LitCount(FrameRenderer.Render(flash, t, null, 100)));
+            Assert.Equal(0, LitCount(FrameRenderer.Render(flash, t, null, 250)));
+            Assert.Equal(10, LitCount(FrameRenderer.Render(flash, t, null, 400)));
+
+            var fill = EngineRow(EngineAnimation.Fill, EngineAnimation.Off);
+            Assert.Equal(5, LitCount(FrameRenderer.Render(fill, t, null, 300)));
+            Assert.All(FrameRenderer.Render(fill, t, null, 900), c => Assert.Equal(Green.Scale(0.25), c));
+
+            // Off: nothing, also no dark LEDs over the layers below.
+            var stop = new TelemetrySnapshot { EngineStoppedAtMs = 0 };
+            Assert.All(FrameRenderer.Render(fill, stop, null, 100), c => Assert.True(c.IsTransparent));
+        }
+
+        [Fact]
+        public void Engine_tests_play_the_animations_once()
+        {
+            var tests = new TestMode();
+            tests.RequestEngineStart();
+            var t = new TelemetrySnapshot();
+            tests.Apply(t, null, 5000);
+            Assert.Equal(5000, t.EngineStartedAtMs);
+
+            var later = new TelemetrySnapshot();
+            tests.Apply(later, null, 6000);
+            Assert.Equal(5000, later.EngineStartedAtMs);
+            Assert.Equal(EngineStateTracker.Never, later.EngineStoppedAtMs);
+
+            tests.RequestEngineStop();
+            var stop = new TelemetrySnapshot();
+            tests.Apply(stop, null, 7000);
+            Assert.Equal(7000, stop.EngineStoppedAtMs);
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using FreeTheLights.CarData;
 using FreeTheLights.Core;
 
@@ -26,6 +27,14 @@ namespace FreeTheLights.Engine
         private bool rpmSweep;
         private bool press;
         private bool idle;
+
+        /// <summary>Engine start/stop asked for by the UI (1 = pending), stamped with the game loop's time in <see cref="Apply"/>.</summary>
+        private int engineStartRequested;
+        private int engineStopRequested;
+
+        // Only the game loop (Apply) reads and writes these.
+        private long engineStartedAtMs = EngineStateTracker.Never;
+        private long engineStoppedAtMs = EngineStateTracker.Never;
 
         /// <summary>The part showing the wiring test pattern (boxed Guid, swapped atomically: the game loop reads it).</summary>
         private volatile object wiringPart = Guid.Empty;
@@ -89,6 +98,12 @@ namespace FreeTheLights.Engine
             }
         }
 
+        /// <summary>Plays the engine start animation once, as if the engine had just started.</summary>
+        public void RequestEngineStart() => Interlocked.Exchange(ref engineStartRequested, 1);
+
+        /// <summary>Plays the engine stop animation once, as if the engine had just stopped.</summary>
+        public void RequestEngineStop() => Interlocked.Exchange(ref engineStopRequested, 1);
+
         public bool AnyActive => AnyFeatureTest || Idle || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
 
         /// <summary>A test of a game feature is on: the idle animation then gives way, so it doesn't hide the test.</summary>
@@ -115,6 +130,11 @@ namespace FreeTheLights.Engine
             t.TcActive |= Tc;
             t.SimulatePress |= Press;
             t.Idle = Idle || (!t.GameRunning && !AnyFeatureTest);
+
+            if (Interlocked.Exchange(ref engineStartRequested, 0) != 0) engineStartedAtMs = nowMs;
+            if (Interlocked.Exchange(ref engineStopRequested, 0) != 0) engineStoppedAtMs = nowMs;
+            t.EngineStartedAtMs = Math.Max(t.EngineStartedAtMs, engineStartedAtMs);
+            t.EngineStoppedAtMs = Math.Max(t.EngineStoppedAtMs, engineStoppedAtMs);
 
             if (CarLeft)
             {

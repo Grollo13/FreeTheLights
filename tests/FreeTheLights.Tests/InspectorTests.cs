@@ -781,7 +781,7 @@ namespace FreeTheLights.Tests
             inspector.Select(part, matrix, 10, false);
 
             Assert.Equal("LED 11 of 32 · device LED #11", inspector.Subtitle);
-            Assert.Equal(new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Idle }, inspector.Features.Select(f => f.Kind));
+            Assert.Equal(new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Engine, LayerKind.Idle }, inspector.Features.Select(f => f.Kind));
         }
 
         [Fact]
@@ -796,19 +796,19 @@ namespace FreeTheLights.Tests
 
             inspector.Select(part, row, 0, false);
             Assert.Equal(
-                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Rpm, LayerKind.Idle },
+                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Engine, LayerKind.Rpm, LayerKind.Idle },
                 inspector.Features.Select(f => f.Kind));
             Assert.Equal(
-                new[] { "Race control flags", "Car proximity", "ABS", "Traction control", "RPM", "Idle" },
+                new[] { "Race control flags", "Car proximity", "ABS", "Traction control", "Engine start and stop", "RPM", "Idle" },
                 inspector.Features.Select(f => f.Name));
             Assert.Equal(
-                new[] { false, false, false, false, true, true },
+                new[] { false, false, false, false, true, true, true },
                 inspector.Features.Select(f => f.IsChecked));
 
             // RPM only drives rows.
             inspector.Select(part, column, 0, false);
             Assert.Equal(
-                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Idle },
+                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Engine, LayerKind.Idle },
                 inspector.Features.Select(f => f.Kind));
             Assert.All(inspector.Features, f => Assert.True(f.IsChecked));
 

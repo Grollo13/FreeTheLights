@@ -24,6 +24,9 @@ namespace FreeTheLights.Settings
 
         /// <summary>The idle animation, while no game runs.</summary>
         Idle = 7,
+
+        /// <summary>The animations when the engine starts or stops.</summary>
+        Engine = 8,
     }
 
     /// <summary>
@@ -114,6 +117,9 @@ namespace FreeTheLights.Settings
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public IdleSettings Idle { get; set; } = new IdleSettings();
 
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public EngineSettings Engine { get; set; } = new EngineSettings();
+
         /// <summary>Which presets the front plate elements were created from (see <see cref="ApplyFrontPlate"/>).</summary>
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public FrontPlateLayout FrontPlate { get; set; } = new FrontPlateLayout();
@@ -130,6 +136,7 @@ namespace FreeTheLights.Settings
             new FeatureInfo(LayerKind.Proximity, "Car proximity", d => d.Proximity),
             new FeatureInfo(LayerKind.Abs, "ABS", d => d.Abs),
             new FeatureInfo(LayerKind.TractionControl, "Traction control", d => d.TractionControl),
+            new FeatureInfo(LayerKind.Engine, "Engine start and stop", d => d.Engine),
             new FeatureInfo(LayerKind.Rpm, "RPM", d => d.Rpm),
             new FeatureInfo(LayerKind.Idle, "Idle", d => d.Idle),
             new FeatureInfo(LayerKind.StaticColor, "Static colors", d => d.StaticColors),
@@ -207,6 +214,9 @@ namespace FreeTheLights.Settings
             if (Idle == null) Idle = new IdleSettings();
             if (!Enum.IsDefined(typeof(IdleAnimation), Idle.Animation)) Idle.Animation = IdleAnimation.Running;
             if (!Enum.IsDefined(typeof(AnimationColorMode), Idle.ColorMode)) Idle.ColorMode = AnimationColorMode.Fixed;
+            if (Engine == null) Engine = new EngineSettings();
+            if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StartAnimation)) Engine.StartAnimation = EngineAnimation.Sweep;
+            if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StopAnimation)) Engine.StopAnimation = EngineAnimation.Drain;
             if (FrontPlate == null) FrontPlate = new FrontPlateLayout();
             foreach (var feature in Features)
             {

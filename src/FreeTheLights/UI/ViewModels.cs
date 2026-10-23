@@ -199,6 +199,7 @@ namespace FreeTheLights.UI
         public ObservableCollection<TargetOption> AbsTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> TcTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> IdleTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> EngineTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<LayerItem> Layers { get; } = new ObservableCollection<LayerItem>();
 
         /// <summary>The part has a row of LEDs, the only kind RPM lights can use (else the RPM tab is hidden).</summary>
@@ -347,6 +348,7 @@ namespace FreeTheLights.UI
                 case LayerKind.Abs: return AbsTargets;
                 case LayerKind.TractionControl: return TcTargets;
                 case LayerKind.Idle: return IdleTargets;
+                case LayerKind.Engine: return EngineTargets;
                 default: return null;
             }
         }
@@ -401,6 +403,8 @@ namespace FreeTheLights.UI
             RemoveDeviceCommand = new RelayCommand(_ => RemoveDevice(), _ => SelectedDevice != null);
             ReloadCarDataCommand = new RelayCommand(_ => Plugin.CarData.Reload());
             ClearTestsCommand = new RelayCommand(_ => TestMode.Clear());
+            EngineStartCommand = new RelayCommand(_ => TestMode.RequestEngineStart());
+            EngineStopCommand = new RelayCommand(_ => TestMode.RequestEngineStop());
             // No CanExecute: the button only shows while an update can be installed (CanInstallUpdate), and WPF would only
             // ask again on its next requery, leaving the button disabled after the status changed.
             InstallUpdateCommand = new RelayCommand(_ => InstallUpdate());
@@ -545,6 +549,10 @@ namespace FreeTheLights.UI
         public ICommand RemoveDeviceCommand { get; }
         public ICommand ReloadCarDataCommand { get; }
         public ICommand ClearTestsCommand { get; }
+
+        public ICommand EngineStartCommand { get; }
+
+        public ICommand EngineStopCommand { get; }
         public ICommand InstallUpdateCommand { get; }
         public ICommand CheckForUpdatesNowCommand { get; }
         public ICommand OpenReleaseNotesCommand { get; }
@@ -680,6 +688,7 @@ namespace FreeTheLights.UI
         public Array FillOrigins => Enum.GetValues(typeof(FillOrigin));
         public Array IdleAnimations => Enum.GetValues(typeof(IdleAnimation));
         public Array AnimationColorModes => Enum.GetValues(typeof(AnimationColorMode));
+        public Array EngineAnimations => Enum.GetValues(typeof(EngineAnimation));
 
         /// <summary>Called periodically by the view to refresh status texts.</summary>
         public void RefreshStatus()

@@ -406,4 +406,47 @@ namespace FreeTheLights.Settings
         /// <summary>Length of the running light's tail, in percent of the LEDs.</summary>
         public int TrailPercent { get => trailPercent; set => Set(ref trailPercent, Math.Max(1, Math.Min(100, value))); }
     }
+
+    /// <summary>How the LEDs greet an engine start or stop. Values are explicit because they are stored in the settings; never renumber them.</summary>
+    public enum EngineAnimation
+    {
+        /// <summary>No animation.</summary>
+        Off = 0,
+
+        /// <summary>The LEDs fill up and empty again, like a gauge sweep.</summary>
+        Sweep = 1,
+
+        /// <summary>The LEDs fill up, then fade out.</summary>
+        Fill = 2,
+
+        /// <summary>All LEDs flash three times.</summary>
+        Flash = 3,
+
+        /// <summary>All LEDs light up and empty towards the start.</summary>
+        Drain = 4,
+
+        /// <summary>All LEDs light up and fade out.</summary>
+        Fade = 5,
+    }
+
+    /// <summary>The animations when the car's engine starts or stops.</summary>
+    public class EngineSettings : AnimationSettingsBase
+    {
+        private EngineAnimation startAnimation = EngineAnimation.Sweep;
+        private string startColor = "#FF00E060";
+        private EngineAnimation stopAnimation = EngineAnimation.Drain;
+        private string stopColor = "#FFFF3000";
+        private int durationMs = 1500;
+
+        public EngineAnimation StartAnimation { get => startAnimation; set => Set(ref startAnimation, value); }
+
+        public string StartColor { get => startColor; set => Set(ref startColor, value); }
+
+        public EngineAnimation StopAnimation { get => stopAnimation; set => Set(ref stopAnimation, value); }
+
+        public string StopColor { get => stopColor; set => Set(ref stopColor, value); }
+
+        /// <summary>How long each animation plays.</summary>
+        public int DurationMs { get => durationMs; set => Set(ref durationMs, Math.Max(300, Math.Min(5000, value))); }
+    }
 }
