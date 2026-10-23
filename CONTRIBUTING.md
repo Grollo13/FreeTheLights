@@ -119,9 +119,12 @@ Only admins of the repository publish releases.
    `build: Bump the version to X.Y.Z`, merged like any other change.
    Versions follow semantic versioning; the release is tagged `vX.Y.Z`.
 2. On an up-to-date, clean `main`, run `sh tools/release.sh -d`. It
-   builds and tests the release, tags it, and creates a draft release
-   with `FreeTheLights.dll`, its SHA-256 and the notes generated from the
-   pull requests merged since the previous release.
+   builds and tests the release, builds the installer, tags it, and
+   creates a draft release with `FreeTheLights.dll`, the installer
+   `FreeTheLights-Setup-X.Y.Z.exe`, their SHA-256 and the notes
+   generated from the pull requests merged since the previous release.
+   The installer needs Inno Setup 6
+   (`winget install JRSoftware.InnoSetup`).
 3. Review the notes on GitHub and publish the draft. Running the plugin
    then offers the update to its users (it only looks at published,
    non-pre-release releases of this repository).

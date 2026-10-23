@@ -21,11 +21,17 @@ LEDs that FreeTheLights does not drive stay transparent, so effects below it in 
 
 ## Install and update
 
-1. Close SimHub.
-2. Download `FreeTheLights.dll` from the latest [release](https://github.com/Grollo13/FreeTheLights/releases/latest) and copy it into SimHub's folder (by default `C:\Program Files (x86)\SimHub\`).
-3. Start SimHub and enable the plugin when it asks.
+1. Download `FreeTheLights-Setup-X.Y.Z.exe` from the latest [release](https://github.com/Grollo13/FreeTheLights/releases/latest) and run it.
+2. Setup finds SimHub's folder by itself. If SimHub is running, it offers to close it. Windows asks for administrator rights, because SimHub is installed under `Program Files`.
+3. Start SimHub (Setup offers to) and enable the plugin when it asks.
 
-To update, use the plugin itself. It looks for a new release once a day, and the card at the bottom of its sidebar shows the version you have. When there's a new one, click **Update plugin**. If SimHub is installed under `Program Files`, Windows asks for administrator rights. Restart SimHub afterwards to use the new version. **What's new** opens the release notes. Turn off **Check for updates** to stop it from looking.
+The installer isn't signed yet, so Windows may show "Windows protected your PC" first: click **More info**, then **Run anyway**.
+
+To remove FreeTheLights, uninstall it like any other app (Settings > Apps, "FreeTheLights (SimHub plugin)"). Your FreeTheLights settings stay in SimHub's `PluginsData` folder.
+
+**Without the installer:** close SimHub, download `FreeTheLights.dll` from the release and copy it into SimHub's folder (by default `C:\Program Files (x86)\SimHub\`), then start SimHub.
+
+To update, use the plugin itself (or run the newer installer). It looks for a new release once a day, and the card at the bottom of its sidebar shows the version you have. When there's a new one, click **Update plugin**. If SimHub is installed under `Program Files`, Windows asks for administrator rights. Restart SimHub afterwards to use the new version. **What's new** opens the release notes. Turn off **Check for updates** to stop it from looking.
 
 ## Build
 
