@@ -83,10 +83,17 @@ namespace FreeTheLights.Tests
 
             Assert.NotNull(device.Flags);
             Assert.Equal(FlagSettings.DefaultOrder.Length, device.Flags.Rules.Count);
-            Assert.Equal(LayerKind.Press, device.LayerPriority[0]);
-            Assert.Equal(LayerKind.Rpm, device.LayerPriority[1]);
-            Assert.Equal(7, device.LayerPriority.Count);
-            Assert.Equal(LayerKind.StaticColor, device.LayerPriority.Last());
+            Assert.Equal(DevicePart.AllFeatures.Select(f => f.Kind), device.LayerPriority);
+        }
+
+        [Fact]
+        public void Missing_layers_are_inserted_at_their_default_position()
+        {
+            // The user moved RPM first and the static colors above ABS; the missing layers go after their predecessor.
+            var device = JsonConvert.DeserializeObject<DevicePart>(@"{ ""LayerPriority"": [4, 0, 1, 5, 2, 3] }");
+            device.EnsureDefaults();
+
+            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Idle, LayerKind.Flags, LayerKind.Proximity, LayerKind.StaticColor, LayerKind.Abs, LayerKind.TractionControl, LayerKind.PitLimiter, LayerKind.Engine }, device.LayerPriority.ToArray());
         }
 
         [Fact]
@@ -197,6 +204,24 @@ namespace FreeTheLights.Tests
         [InlineData(typeof(LayerKind), "Rpm", 4)]
         [InlineData(typeof(LayerKind), "StaticColor", 5)]
         [InlineData(typeof(LayerKind), "Press", 6)]
+        [InlineData(typeof(LayerKind), "Idle", 7)]
+        [InlineData(typeof(LayerKind), "Engine", 8)]
+        [InlineData(typeof(LayerKind), "PitLimiter", 9)]
+        [InlineData(typeof(PitLimiterAnimation), "Blink", 0)]
+        [InlineData(typeof(PitLimiterAnimation), "Alternate", 1)]
+        [InlineData(typeof(PitLimiterAnimation), "Scroll", 2)]
+        [InlineData(typeof(EngineAnimation), "Off", 0)]
+        [InlineData(typeof(EngineAnimation), "Sweep", 1)]
+        [InlineData(typeof(EngineAnimation), "Fill", 2)]
+        [InlineData(typeof(EngineAnimation), "Flash", 3)]
+        [InlineData(typeof(EngineAnimation), "Drain", 4)]
+        [InlineData(typeof(EngineAnimation), "Fade", 5)]
+        [InlineData(typeof(IdleAnimation), "Breathing", 0)]
+        [InlineData(typeof(IdleAnimation), "Running", 1)]
+        [InlineData(typeof(IdleAnimation), "Oscillating", 2)]
+        [InlineData(typeof(AnimationColorMode), "Fixed", 0)]
+        [InlineData(typeof(AnimationColorMode), "Cycle", 1)]
+        [InlineData(typeof(AnimationColorMode), "Rainbow", 2)]
         [InlineData(typeof(LedGroupKind), "HorizontalRow", 0)]
         [InlineData(typeof(LedGroupKind), "VerticalColumn", 1)]
         [InlineData(typeof(LedGroupKind), "Matrix", 2)]
@@ -235,8 +260,8 @@ namespace FreeTheLights.Tests
         public void Every_persisted_enum_member_is_pinned()
         {
             // A new member needs a row in Persisted_enum_values_never_change, with a new number.
-            var types = new[] { typeof(LayerKind), typeof(LedGroupKind), typeof(ElementType), typeof(LedGroupSide), typeof(RpmFallbackMode), typeof(FlagKind), typeof(FlagPattern), typeof(FlagAnimation), typeof(FillOrigin), typeof(LedChannel), typeof(DeviceType), typeof(PhotoLedSource) };
-            Assert.Equal(49, types.Sum(t => Enum.GetValues(t).Length));
+            var types = new[] { typeof(LayerKind), typeof(LedGroupKind), typeof(ElementType), typeof(LedGroupSide), typeof(RpmFallbackMode), typeof(FlagKind), typeof(FlagPattern), typeof(FlagAnimation), typeof(FillOrigin), typeof(LedChannel), typeof(DeviceType), typeof(PhotoLedSource), typeof(IdleAnimation), typeof(AnimationColorMode), typeof(EngineAnimation), typeof(PitLimiterAnimation) };
+            Assert.Equal(67, types.Sum(t => Enum.GetValues(t).Length));
         }
 
         [Fact]
@@ -270,7 +295,7 @@ namespace FreeTheLights.Tests
             var loaded = JsonConvert.DeserializeObject<DevicePart>(@"{ ""LayerPriority"": [99, 4] }");
             loaded.EnsureDefaults();
 
-            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.StaticColor }, loaded.LayerPriority.ToArray());
+            Assert.Equal(DevicePart.AllFeatures.Select(f => f.Kind), loaded.LayerPriority);
             Assert.Null(new DevicePart().GetFeature((LayerKind)99));
         }
 

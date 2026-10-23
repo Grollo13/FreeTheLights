@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using FreeTheLights.CarData;
 using FreeTheLights.Core;
 
@@ -25,6 +26,16 @@ namespace FreeTheLights.Engine
         private bool tc;
         private bool rpmSweep;
         private bool press;
+        private bool idle;
+        private bool pitLimiter;
+
+        /// <summary>Engine start/stop asked for by the UI (1 = pending), stamped with the game loop's time in <see cref="Apply"/>.</summary>
+        private int engineStartRequested;
+        private int engineStopRequested;
+
+        // Only the game loop (Apply) reads and writes these.
+        private long engineStartedAtMs = EngineStateTracker.Never;
+        private long engineStoppedAtMs = EngineStateTracker.Never;
 
         /// <summary>The part showing the wiring test pattern (boxed Guid, swapped atomically: the game loop reads it).</summary>
         private volatile object wiringPart = Guid.Empty;
@@ -52,6 +63,12 @@ namespace FreeTheLights.Engine
 
         /// <summary>Every front plate element with a press color shows it, as if its button were held.</summary>
         public bool Press { get => press; set => Set(ref press, value); }
+
+        /// <summary>The pit limiter is on.</summary>
+        public bool PitLimiter { get => pitLimiter; set => Set(ref pitLimiter, value); }
+
+        /// <summary>The idle animation shows, also while a game runs.</summary>
+        public bool Idle { get => idle; set => Set(ref idle, value); }
 
         /// <summary>
         /// The part that shows <see cref="WiringPattern"/> instead of its features, on the device and in the preview;
@@ -85,12 +102,20 @@ namespace FreeTheLights.Engine
             }
         }
 
-        public bool AnyActive => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press
-                                 || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
+        /// <summary>Plays the engine start animation once, as if the engine had just started.</summary>
+        public void RequestEngineStart() => Interlocked.Exchange(ref engineStartRequested, 1);
+
+        /// <summary>Plays the engine stop animation once, as if the engine had just stopped.</summary>
+        public void RequestEngineStop() => Interlocked.Exchange(ref engineStopRequested, 1);
+
+        public bool AnyActive => AnyFeatureTest || Idle || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
+
+        /// <summary>A test of a game feature is on: the idle animation then gives way, so it doesn't hide the test.</summary>
+        private bool AnyFeatureTest => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press || PitLimiter;
 
         public void Clear()
         {
-            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = false;
+            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = PitLimiter = Idle = false;
             WiringPartId = Guid.Empty;
             ConfirmationDeviceId = Guid.Empty;
         }
@@ -108,6 +133,13 @@ namespace FreeTheLights.Engine
             t.AbsActive |= Abs;
             t.TcActive |= Tc;
             t.SimulatePress |= Press;
+            t.PitLimiter |= PitLimiter;
+            t.Idle = Idle || (!t.GameRunning && !AnyFeatureTest);
+
+            if (Interlocked.Exchange(ref engineStartRequested, 0) != 0) engineStartedAtMs = nowMs;
+            if (Interlocked.Exchange(ref engineStopRequested, 0) != 0) engineStoppedAtMs = nowMs;
+            t.EngineStartedAtMs = Math.Max(t.EngineStartedAtMs, engineStartedAtMs);
+            t.EngineStoppedAtMs = Math.Max(t.EngineStoppedAtMs, engineStoppedAtMs);
 
             if (CarLeft)
             {

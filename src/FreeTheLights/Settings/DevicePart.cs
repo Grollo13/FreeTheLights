@@ -21,6 +21,15 @@ namespace FreeTheLights.Settings
 
         /// <summary>Front plate elements whose button is pressed or dial turned (the highest layer by default).</summary>
         Press = 6,
+
+        /// <summary>The idle animation, while no game runs.</summary>
+        Idle = 7,
+
+        /// <summary>The animations when the engine starts or stops.</summary>
+        Engine = 8,
+
+        /// <summary>The animation while the pit limiter is on.</summary>
+        PitLimiter = 9,
     }
 
     /// <summary>
@@ -108,6 +117,15 @@ namespace FreeTheLights.Settings
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public PressSettings Press { get; set; } = new PressSettings();
 
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public IdleSettings Idle { get; set; } = new IdleSettings();
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public EngineSettings Engine { get; set; } = new EngineSettings();
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public PitLimiterSettings PitLimiter { get; set; } = new PitLimiterSettings();
+
         /// <summary>Which presets the front plate elements were created from (see <see cref="ApplyFrontPlate"/>).</summary>
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public FrontPlateLayout FrontPlate { get; set; } = new FrontPlateLayout();
@@ -124,7 +142,10 @@ namespace FreeTheLights.Settings
             new FeatureInfo(LayerKind.Proximity, "Car proximity", d => d.Proximity),
             new FeatureInfo(LayerKind.Abs, "ABS", d => d.Abs),
             new FeatureInfo(LayerKind.TractionControl, "Traction control", d => d.TractionControl),
+            new FeatureInfo(LayerKind.PitLimiter, "Pit limiter", d => d.PitLimiter),
+            new FeatureInfo(LayerKind.Engine, "Engine start and stop", d => d.Engine),
             new FeatureInfo(LayerKind.Rpm, "RPM", d => d.Rpm),
+            new FeatureInfo(LayerKind.Idle, "Idle", d => d.Idle),
             new FeatureInfo(LayerKind.StaticColor, "Static colors", d => d.StaticColors),
         };
 
@@ -197,6 +218,14 @@ namespace FreeTheLights.Settings
             if (TractionControl == null) TractionControl = new IndicatorSettings(IndicatorSettings.TractionControlDefaultColor);
             if (StaticColors == null) StaticColors = new StaticColorSettings();
             if (Press == null) Press = new PressSettings();
+            if (Idle == null) Idle = new IdleSettings();
+            if (!Enum.IsDefined(typeof(IdleAnimation), Idle.Animation)) Idle.Animation = IdleAnimation.Running;
+            if (!Enum.IsDefined(typeof(AnimationColorMode), Idle.ColorMode)) Idle.ColorMode = AnimationColorMode.Fixed;
+            if (Engine == null) Engine = new EngineSettings();
+            if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StartAnimation)) Engine.StartAnimation = EngineAnimation.Sweep;
+            if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StopAnimation)) Engine.StopAnimation = EngineAnimation.Drain;
+            if (PitLimiter == null) PitLimiter = new PitLimiterSettings();
+            if (!Enum.IsDefined(typeof(PitLimiterAnimation), PitLimiter.Animation)) PitLimiter.Animation = PitLimiterAnimation.Alternate;
             if (FrontPlate == null) FrontPlate = new FrontPlateLayout();
             foreach (var feature in Features)
             {
@@ -215,11 +244,21 @@ namespace FreeTheLights.Settings
                 while (LayerPriority.Count(l => l == duplicate) > 1) LayerPriority.Remove(duplicate);
             }
 
-            // Missing layers are added last, except the press layer: the driver's own input wins over everything.
-            if (!LayerPriority.Contains(LayerKind.Press)) LayerPriority.Insert(0, LayerKind.Press);
-            foreach (var feature in AllFeatures)
+            // Missing layers (features added by an update) go to their default position: right after the layer that
+            // precedes them in AllFeatures, or first. Appending them would put them under the static colors.
+            for (var f = 0; f < AllFeatures.Length; f++)
             {
-                if (!LayerPriority.Contains(feature.Kind)) LayerPriority.Add(feature.Kind);
+                if (LayerPriority.Contains(AllFeatures[f].Kind)) continue;
+                var at = 0;
+                for (var before = f - 1; before >= 0; before--)
+                {
+                    var index = LayerPriority.IndexOf(AllFeatures[before].Kind);
+                    if (index < 0) continue;
+                    at = index + 1;
+                    break;
+                }
+
+                LayerPriority.Insert(at, AllFeatures[f].Kind);
             }
         }
 

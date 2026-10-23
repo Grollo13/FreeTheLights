@@ -116,6 +116,9 @@ namespace FreeTheLights.UI
                 case LayerKind.TractionControl: return PackIconMaterialKind.CarTractionControl;
                 case LayerKind.StaticColor: return PackIconMaterialKind.Palette;
                 case LayerKind.Press: return PackIconMaterialKind.GestureTapButton;
+                case LayerKind.Idle: return PackIconMaterialKind.Sleep;
+                case LayerKind.Engine: return PackIconMaterialKind.Engine;
+                case LayerKind.PitLimiter: return PackIconMaterialKind.SpeedometerSlow;
                 default: return PackIconMaterialKind.Layers;
             }
         }

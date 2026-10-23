@@ -42,6 +42,7 @@
     <Compile Include="CarDataTests.cs" />
     <Compile Include="CarDataVersionTests.cs" />
     <Compile Include="DashPhotoTests.cs" />
+    <Compile Include="EngineStateTests.cs" />
     <Compile Include="FrameRendererTests.cs" />
     <Compile Include="FrontPlateTests.cs" />
     <Compile Include="InputStateTests.cs" />

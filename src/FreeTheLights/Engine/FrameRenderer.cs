@@ -67,6 +67,9 @@ namespace FreeTheLights.Engine
             [LayerKind.TractionControl] = (d, g, l, t, p, now) => RenderIndicator(d.TractionControl, t.TcActive, g, l, now),
             [LayerKind.StaticColor] = (d, g, l, t, p, now) => RenderStaticColor(g, l),
             [LayerKind.Press] = (d, g, l, t, p, now) => RenderPress(g, l, t, now),
+            [LayerKind.Idle] = (d, g, l, t, p, now) => RenderIdle(d, d.Idle, g, l, t, now),
+            [LayerKind.Engine] = (d, g, l, t, p, now) => RenderEngine(d, d.Engine, g, l, t, now),
+            [LayerKind.PitLimiter] = (d, g, l, t, p, now) => RenderPitLimiter(d, d.PitLimiter, g, l, t, now),
         };
 
         /// <summary>Whether the renderer draws <paramref name="kind"/>'s layer; a feature without a renderer stays dark.</summary>
@@ -343,6 +346,190 @@ namespace FreeTheLights.Engine
             }
 
             return false;
+        }
+
+        // ---------- Idle animation ----------
+
+        /// <summary>Darkest point of a breath.</summary>
+        public const double BreathDim = 0.05;
+
+        public static void RenderIdle(DevicePart part, IdleSettings settings, LedGroup group, LedColor[] layer, TelemetrySnapshot t, long nowMs)
+        {
+            if (!t.Idle) return;
+            var sampler = new IdleSampler
+            {
+                Animation = settings.Animation,
+                Color = LedColor.ParseCached(settings.Color),
+                ColorMode = settings.ColorMode,
+                NowMs = nowMs,
+                PeriodMs = settings.PeriodMs,
+                Trail = settings.TrailPercent / 100.0,
+            };
+            Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
+        }
+
+        private struct IdleSampler : Animations.ISampler
+        {
+            public IdleAnimation Animation;
+            public LedColor Color;
+            public AnimationColorMode ColorMode;
+            public long NowMs;
+            public int PeriodMs;
+            public double Trail;
+
+            public LedColor Sample(double position, double step)
+            {
+                double brightness;
+                switch (Animation)
+                {
+                    case IdleAnimation.Running:
+                    {
+                        // The light enters before the first LED and runs on until its tail has left the last one.
+                        var head = -step / 2 + Animations.Phase(NowMs, PeriodMs) * (1 + Math.Max(Trail, step) + step);
+                        brightness = Animations.Tail(head - position, Trail, step);
+                        break;
+                    }
+
+                    case IdleAnimation.Oscillating:
+                    {
+                        // One way per period, then back; the tail follows the light.
+                        var phase = Animations.Phase(NowMs, 2 * PeriodMs) * 2;
+                        var forward = phase < 1;
+                        var head = forward ? phase : 2 - phase;
+                        brightness = Animations.Tail(forward ? head - position : position - head, Trail, step);
+                        break;
+                    }
+
+                    default:
+                        brightness = Animations.Breath(Animations.Phase(NowMs, PeriodMs), BreathDim);
+                        break;
+                }
+
+                return Animations.Shade(Animations.ColorAt(Color, ColorMode, position, NowMs), brightness);
+            }
+        }
+
+        // ---------- Engine start and stop ----------
+
+        /// <summary>The start or stop animation for <see cref="EngineSettings.DurationMs"/> after the latest of the two.</summary>
+        public static void RenderEngine(DevicePart part, EngineSettings settings, LedGroup group, LedColor[] layer, TelemetrySnapshot t, long nowMs)
+        {
+            var start = t.EngineStartedAtMs != EngineStateTracker.Never
+                        && (t.EngineStoppedAtMs == EngineStateTracker.Never || t.EngineStartedAtMs >= t.EngineStoppedAtMs);
+            var at = start ? t.EngineStartedAtMs : t.EngineStoppedAtMs;
+            if (at == EngineStateTracker.Never) return;
+
+            var elapsed = nowMs - at;
+            if (elapsed < 0 || elapsed >= settings.DurationMs) return;
+
+            var sampler = new EngineSampler
+            {
+                Animation = start ? settings.StartAnimation : settings.StopAnimation,
+                Color = LedColor.ParseCached(start ? settings.StartColor : settings.StopColor),
+                Progress = (double)elapsed / settings.DurationMs,
+            };
+            if (sampler.Animation == EngineAnimation.Off) return;
+            Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
+        }
+
+        /// <summary>Share of the <see cref="EngineAnimation.Fill"/> animation that fills; the rest fades.</summary>
+        private const double FillShare = 0.6;
+
+        private struct EngineSampler : Animations.ISampler
+        {
+            public EngineAnimation Animation;
+            public LedColor Color;
+
+            /// <summary>0..1 through the animation.</summary>
+            public double Progress;
+
+            public LedColor Sample(double position, double step)
+            {
+                double brightness;
+                switch (Animation)
+                {
+                    case EngineAnimation.Sweep:
+                        brightness = position <= (Progress < 0.5 ? 2 * Progress : 2 - 2 * Progress) ? 1 : 0;
+                        break;
+                    case EngineAnimation.Fill:
+                        brightness = Progress >= FillShare ? 1 - (Progress - FillShare) / (1 - FillShare)
+                            : position <= Progress / FillShare ? 1 : 0;
+                        break;
+                    case EngineAnimation.Flash:
+                        brightness = Progress * 3 % 1 < 0.5 ? 1 : 0;
+                        break;
+                    case EngineAnimation.Drain:
+                        brightness = position <= 1 - Progress ? 1 : 0;
+                        break;
+                    default:
+                        brightness = 1 - Progress;
+                        break;
+                }
+
+                return Animations.Shade(Color, brightness);
+            }
+        }
+
+        // ---------- Pit limiter ----------
+
+        /// <summary>LEDs per stripe of the <see cref="PitLimiterAnimation.Scroll"/> animation.</summary>
+        public const int PitStripeLeds = 2;
+
+        public static void RenderPitLimiter(DevicePart part, PitLimiterSettings settings, LedGroup group, LedColor[] layer, TelemetrySnapshot t, long nowMs)
+        {
+            if (!t.PitLimiter) return;
+            var color2 = LedColor.ParseCached(settings.Color2);
+            var sampler = new PitLimiterSampler
+            {
+                Animation = settings.Animation,
+                Color = LedColor.ParseCached(settings.Color),
+                Color2 = color2.IsTransparent ? LedColor.Off : color2,
+                Steps = nowMs / settings.IntervalMs,
+                GroupSize = settings.AlternateGroupSize,
+            };
+            Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
+        }
+
+        private struct PitLimiterSampler : Animations.ISampler
+        {
+            public PitLimiterAnimation Animation;
+            public LedColor Color;
+            public LedColor Color2;
+
+            /// <summary>Intervals passed so far.</summary>
+            public long Steps;
+
+            /// <summary><see cref="PitLimiterSettings.AlternateGroupSize"/>: neighboring LEDs that alternate together, 0 = halves.</summary>
+            public int GroupSize;
+
+            public LedColor Sample(double position, double step)
+            {
+                bool first;
+                switch (Animation)
+                {
+                    case PitLimiterAnimation.Alternate:
+                    {
+                        var firstGroup = GroupSize <= 0 ? position < 0.5 : (long)Math.Floor(position / step) / GroupSize % 2 == 0;
+                        first = firstGroup == (Steps % 2 == 0);
+                        break;
+                    }
+                    case PitLimiterAnimation.Scroll:
+                    {
+                        // The stripes move one LED per interval, towards the end.
+                        var index = (long)Math.Floor(position / step) - Steps;
+                        var stripe = (index >= 0 ? index : index - PitStripeLeds + 1) / PitStripeLeds;
+                        first = stripe % 2 == 0;
+                        break;
+                    }
+
+                    default:
+                        first = Steps % 2 == 0;
+                        break;
+                }
+
+                var color = first ? Color : Color2;
+                return color.IsTransparent ? LedColor.Off : color;
+            }
         }
     }
 }

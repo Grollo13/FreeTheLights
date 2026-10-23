@@ -781,7 +781,7 @@ namespace FreeTheLights.Tests
             inspector.Select(part, matrix, 10, false);
 
             Assert.Equal("LED 11 of 32 · device LED #11", inspector.Subtitle);
-            Assert.Equal(new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl }, inspector.Features.Select(f => f.Kind));
+            Assert.Equal(new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.PitLimiter, LayerKind.Engine, LayerKind.Idle }, inspector.Features.Select(f => f.Kind));
         }
 
         [Fact]
@@ -796,19 +796,19 @@ namespace FreeTheLights.Tests
 
             inspector.Select(part, row, 0, false);
             Assert.Equal(
-                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.Rpm },
+                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.PitLimiter, LayerKind.Engine, LayerKind.Rpm, LayerKind.Idle },
                 inspector.Features.Select(f => f.Kind));
             Assert.Equal(
-                new[] { "Race control flags", "Car proximity", "ABS", "Traction control", "RPM" },
+                new[] { "Race control flags", "Car proximity", "ABS", "Traction control", "Pit limiter", "Engine start and stop", "RPM", "Idle" },
                 inspector.Features.Select(f => f.Name));
             Assert.Equal(
-                new[] { false, false, false, false, true },
+                new[] { false, false, false, false, true, true, true, true },
                 inspector.Features.Select(f => f.IsChecked));
 
             // RPM only drives rows.
             inspector.Select(part, column, 0, false);
             Assert.Equal(
-                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl },
+                new[] { LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.PitLimiter, LayerKind.Engine, LayerKind.Idle },
                 inspector.Features.Select(f => f.Kind));
             Assert.All(inspector.Features, f => Assert.True(f.IsChecked));
 
@@ -844,7 +844,8 @@ namespace FreeTheLights.Tests
 
             // The options are rebuilt on every selection and read the current targets.
             inspector.Select(part, row, 1, false);
-            Assert.All(inspector.Features, f => Assert.False(f.IsChecked));
+            Assert.False(inspector.Features.Single(f => f.Kind == LayerKind.Flags).IsChecked);
+            Assert.False(inspector.Features.Single(f => f.Kind == LayerKind.Rpm).IsChecked);
         }
 
         [Fact]

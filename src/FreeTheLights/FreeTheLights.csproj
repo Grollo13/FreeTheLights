@@ -100,6 +100,7 @@
     <Compile Include="Core\BackupFile.cs" />
     <Compile Include="Core\Blink.cs" />
     <Compile Include="Core\Debouncer.cs" />
+    <Compile Include="Core\EngineStateTracker.cs" />
     <Compile Include="Core\InputState.cs" />
     <Compile Include="Core\IRacingSessionFlags.cs" />
     <Compile Include="Core\LedColor.cs" />
@@ -112,6 +113,7 @@
     <Compile Include="Effect\EffectEditorViewModel.cs" />
     <Compile Include="Effect\FreeTheLightsEffect.cs" />
     <Compile Include="Effect\FreeTheLightsMatrixEffect.cs" />
+    <Compile Include="Engine\Animations.cs" />
     <Compile Include="Engine\ConfirmationPattern.cs" />
     <Compile Include="Engine\FrameRenderer.cs" />
     <Compile Include="Engine\FrameStore.cs" />

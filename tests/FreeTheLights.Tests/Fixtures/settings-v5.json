@@ -1,0 +1,619 @@
+{
+  "SettingsVersion": 5,
+  "Devices": [
+    {
+      "Id": "2a3e8748-66dc-44f0-a542-dadebe8ee427",
+      "Name": "My wheel",
+      "Enabled": true,
+      "Type": 1,
+      "Preset": null,
+      "Parts": [
+        {
+          "Id": "56226f17-8c6d-49a1-b000-bff902cd6161",
+          "Name": "LEDs",
+          "Channel": 0,
+          "SimHubProfileIds": [],
+          "Brightness": 100,
+          "Groups": [
+            {
+              "Id": "2c299ac2-e488-40d4-8a2e-c16967f4c120",
+              "Name": "Shift lights",
+              "Kind": 0,
+              "Count": 15,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 0,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 0,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "Name": "Left column",
+              "Kind": 1,
+              "Count": 3,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 15,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 1,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "beb1d295-3752-4a37-9046-cf428a0494f1",
+              "Name": "Right column",
+              "Kind": 1,
+              "Count": 3,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 18,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 2,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "a8ce61a9-c3ff-4e6c-a1cc-07c942a7ed83",
+              "Name": "Left 1",
+              "Kind": 3,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 21,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 1,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "aa5b4325-2e3e-4f96-a4c8-11ab7cd8ff72",
+              "Name": "Left 2",
+              "Kind": 3,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 22,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 1,
+              "ElementType": 0,
+              "ElementSlot": 1,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "f84e3389-f08b-418e-9858-eaa1eec2564c",
+              "Name": "Dial 1",
+              "Kind": 3,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 23,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 0,
+              "ElementType": 2,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "af8e13c7-48cc-4fa9-8ac9-6945e3eecb65",
+              "Name": "Right 1",
+              "Kind": 3,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 24,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 2,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            },
+            {
+              "Id": "9b4f1779-7309-42dd-8a96-5058a14524cc",
+              "Name": "Right 2",
+              "Kind": 3,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 25,
+              "Reversed": false,
+              "Serpentine": false,
+              "StartsAtBottom": false,
+              "Side": 2,
+              "ElementType": 0,
+              "ElementSlot": 1,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            }
+          ],
+          "Rpm": {
+            "FallbackMode": 0,
+            "GenericStartPercent": 70,
+            "GenericBlinkIntervalMs": 120,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c299ac2-e488-40d4-8a2e-c16967f4c120"
+            ]
+          },
+          "Flags": {
+            "BlinkIntervalMs": 400,
+            "Rules": [
+              {
+                "Kind": 4,
+                "Enabled": false,
+                "Color": "#FFFF2000",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 5,
+                "Enabled": true,
+                "Color": "#FFFFFFFF",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 7,
+                "Enabled": false,
+                "Color": "#FFFF6000",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 0,
+                "Enabled": true,
+                "Color": "#FFFFD000",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 8,
+                "Enabled": true,
+                "Color": "#FFFFD000",
+                "Color2": "#FFFF0000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 1,
+                "Enabled": true,
+                "Color": "#FF0040FF",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 2,
+                "Enabled": true,
+                "Color": "#FFFFFFFF",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 6,
+                "Enabled": false,
+                "Color": "#FF00FF00",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 0
+              }
+            ],
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "Proximity": {
+            "Color": "#FFFFD000",
+            "Progressive": true,
+            "MaxDistance": 5.0,
+            "FillOrigin": 0,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "Abs": {
+            "Color": "#FFFFD000",
+            "Blink": true,
+            "BlinkIntervalMs": 80,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "TractionControl": {
+            "Color": "#FF0060FF",
+            "Blink": true,
+            "BlinkIntervalMs": 80,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "StaticColors": {
+            "Enabled": true,
+            "TargetGroupIds": [
+              "a8ce61a9-c3ff-4e6c-a1cc-07c942a7ed83",
+              "aa5b4325-2e3e-4f96-a4c8-11ab7cd8ff72",
+              "f84e3389-f08b-418e-9858-eaa1eec2564c",
+              "af8e13c7-48cc-4fa9-8ac9-6945e3eecb65",
+              "9b4f1779-7309-42dd-8a96-5058a14524cc"
+            ]
+          },
+          "Press": {
+            "Enabled": true,
+            "TargetGroupIds": [
+              "a8ce61a9-c3ff-4e6c-a1cc-07c942a7ed83",
+              "aa5b4325-2e3e-4f96-a4c8-11ab7cd8ff72",
+              "f84e3389-f08b-418e-9858-eaa1eec2564c",
+              "af8e13c7-48cc-4fa9-8ac9-6945e3eecb65",
+              "9b4f1779-7309-42dd-8a96-5058a14524cc"
+            ]
+          },
+          "Idle": {
+            "Animation": 1,
+            "Color": "#FF0080FF",
+            "ColorMode": 0,
+            "PeriodMs": 3000,
+            "TrailPercent": 30,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c299ac2-e488-40d4-8a2e-c16967f4c120",
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "Engine": {
+            "StartAnimation": 1,
+            "StartColor": "#FF00E060",
+            "StopAnimation": 4,
+            "StopColor": "#FFFF3000",
+            "DurationMs": 1500,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c299ac2-e488-40d4-8a2e-c16967f4c120",
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "PitLimiter": {
+            "Animation": 1,
+            "Color": "#FF0060FF",
+            "Color2": "",
+            "IntervalMs": 250,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "2c299ac2-e488-40d4-8a2e-c16967f4c120",
+              "2c3d81b1-cc3a-45c9-8b60-f574a437b40c",
+              "beb1d295-3752-4a37-9046-cf428a0494f1"
+            ]
+          },
+          "FrontPlate": {
+            "DialPresetId": "1",
+            "SidePresetId": "1x2"
+          },
+          "LayerPriority": [
+            6,
+            0,
+            1,
+            2,
+            3,
+            9,
+            8,
+            4,
+            7,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ab7347ad-dc45-4565-b381-f3a6df3930c9",
+      "Name": "LED flag",
+      "Enabled": true,
+      "Type": 4,
+      "Preset": null,
+      "Parts": [
+        {
+          "Id": "16151cbd-d790-4b58-afd6-dba31aac9fb0",
+          "Name": "LED flag",
+          "Channel": 3,
+          "SimHubProfileIds": [],
+          "Brightness": 100,
+          "Groups": [
+            {
+              "Id": "4859caef-2e19-42df-a036-d68eb6f9520d",
+              "Name": "Flag",
+              "Kind": 2,
+              "Count": 10,
+              "Rows": 8,
+              "Columns": 8,
+              "StartIndex": 0,
+              "Reversed": false,
+              "Serpentine": true,
+              "StartsAtBottom": false,
+              "Side": 0,
+              "ElementType": 0,
+              "ElementSlot": 0,
+              "StaticColor": "",
+              "PressColor": "",
+              "ButtonInput": "",
+              "ClockwiseInput": "",
+              "CounterClockwiseInput": "",
+              "PhotoX": 0.0,
+              "PhotoY": 0.0,
+              "PhotoSize": 0.0,
+              "PhotoLeds": []
+            }
+          ],
+          "Rpm": {
+            "FallbackMode": 0,
+            "GenericStartPercent": 70,
+            "GenericBlinkIntervalMs": 120,
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "Flags": {
+            "BlinkIntervalMs": 400,
+            "Rules": [
+              {
+                "Kind": 4,
+                "Enabled": false,
+                "Color": "#FFFF2000",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 5,
+                "Enabled": true,
+                "Color": "#FFFFFFFF",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 7,
+                "Enabled": false,
+                "Color": "#FFFF6000",
+                "Color2": "#FF000000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 0,
+                "Enabled": true,
+                "Color": "#FFFFD000",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 8,
+                "Enabled": true,
+                "Color": "#FFFFD000",
+                "Color2": "#FFFF0000",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 1,
+                "Enabled": true,
+                "Color": "#FF0040FF",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 1
+              },
+              {
+                "Kind": 2,
+                "Enabled": true,
+                "Color": "#FFFFFFFF",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 0
+              },
+              {
+                "Kind": 6,
+                "Enabled": false,
+                "Color": "#FF00FF00",
+                "Color2": "",
+                "Pattern": 1,
+                "Animation": 0
+              }
+            ],
+            "Enabled": true,
+            "TargetGroupIds": [
+              "4859caef-2e19-42df-a036-d68eb6f9520d"
+            ]
+          },
+          "Proximity": {
+            "Color": "#FFFFD000",
+            "Progressive": true,
+            "MaxDistance": 5.0,
+            "FillOrigin": 0,
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "Abs": {
+            "Color": "#FFFFD000",
+            "Blink": true,
+            "BlinkIntervalMs": 80,
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "TractionControl": {
+            "Color": "#FF0060FF",
+            "Blink": true,
+            "BlinkIntervalMs": 80,
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "StaticColors": {
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "Press": {
+            "Enabled": true,
+            "TargetGroupIds": []
+          },
+          "Idle": {
+            "Animation": 1,
+            "Color": "#FF0080FF",
+            "ColorMode": 0,
+            "PeriodMs": 3000,
+            "TrailPercent": 30,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "4859caef-2e19-42df-a036-d68eb6f9520d"
+            ]
+          },
+          "Engine": {
+            "StartAnimation": 1,
+            "StartColor": "#FF00E060",
+            "StopAnimation": 4,
+            "StopColor": "#FFFF3000",
+            "DurationMs": 1500,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "4859caef-2e19-42df-a036-d68eb6f9520d"
+            ]
+          },
+          "PitLimiter": {
+            "Animation": 1,
+            "Color": "#FF0060FF",
+            "Color2": "",
+            "IntervalMs": 250,
+            "IncludeElements": true,
+            "Mirror": false,
+            "Enabled": true,
+            "TargetGroupIds": [
+              "4859caef-2e19-42df-a036-d68eb6f9520d"
+            ]
+          },
+          "FrontPlate": {
+            "DialPresetId": "none",
+            "SidePresetId": "none"
+          },
+          "LayerPriority": [
+            6,
+            0,
+            1,
+            2,
+            3,
+            9,
+            8,
+            4,
+            7,
+            5
+          ]
+        }
+      ]
+    }
+  ],
+  "CarDataBaseUrl": "https://raw.githubusercontent.com/Lovely-Sim-Racing/lovely-car-data/main/data/",
+  "CarDataRefreshHours": 12,
+  "IndicatorHoldMs": 100,
+  "CheckForUpdates": true
+}

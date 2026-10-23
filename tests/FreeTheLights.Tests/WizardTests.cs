@@ -562,7 +562,7 @@ namespace FreeTheLights.Tests
             var device = DevicePart.CreateDefault("Wheel");
             using (var viewModel = new DeviceViewModel(device))
             {
-                viewModel.MoveLayerCommand.Execute(new MoveRequest(5, 0));
+                viewModel.MoveLayerCommand.Execute(new MoveRequest(device.LayerPriority.IndexOf(LayerKind.Rpm), 0));
                 Assert.Equal(LayerKind.Rpm, device.LayerPriority[0]);
                 Assert.Equal(LayerKind.Rpm, viewModel.Layers[0].Kind);
                 Assert.Equal(LayerKind.Press, device.LayerPriority[1]);

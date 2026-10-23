@@ -40,6 +40,18 @@ namespace FreeTheLights.Tests
             Assert.Equal(LedColor.Parse(text), LedColor.ParseCached(text));
         }
 
+        [Theory]
+        [InlineData(0.0, 255, 0, 0)]
+        [InlineData(1 / 6.0, 255, 255, 0)]
+        [InlineData(1 / 3.0, 0, 255, 0)]
+        [InlineData(2 / 3.0, 0, 0, 255)]
+        [InlineData(1.0, 255, 0, 0)]
+        [InlineData(-1 / 3.0, 0, 0, 255)]
+        public void Hues_go_round_the_rainbow(double hue, int r, int g, int b)
+        {
+            Assert.Equal(LedColor.FromRgb((byte)r, (byte)g, (byte)b), LedColor.FromHue(hue));
+        }
+
         [Fact]
         public void Hex_roundtrip()
         {

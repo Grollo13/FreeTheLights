@@ -114,8 +114,32 @@ namespace FreeTheLights.Settings
         /// </summary>
         public static readonly IReadOnlyList<SettingsMigration> Migrations = new SettingsMigration[]
         {
-            // new SettingsMigration(4, "What changed", json => { ... }),
+            new SettingsMigration(4, "the idle, engine and pit limiter animations are on for existing devices", AddAnimationTargets),
         };
+
+        /// <summary>
+        /// Format 5 added the animations (idle, engine start and stop, pit limiter). A new device gets them on for all its
+        /// rows, columns and matrices (<see cref="DevicePart.AddGroup"/>); give every part of the saved devices the same
+        /// targets. Their layers are put in place by <see cref="DevicePart.EnsureDefaults"/>.
+        /// </summary>
+        private static void AddAnimationTargets(JObject json)
+        {
+            foreach (var part in Objects(json["Devices"]).SelectMany(d => Objects(d["Parts"])))
+            {
+                var targets = Objects(part["Groups"])
+                    .Where(g => g["Kind"] == null || g["Kind"].Type != JTokenType.Integer || (int)g["Kind"] != (int)LedGroupKind.Element)
+                    .Select(g => g["Id"])
+                    .Where(id => id != null && id.Type != JTokenType.Null)
+                    .ToList();
+                foreach (var feature in new[] { "Idle", "Engine", "PitLimiter" })
+                {
+                    if (part[feature] is JObject) continue;
+                    part[feature] = new JObject { ["TargetGroupIds"] = new JArray(targets.Select(id => id.DeepClone())) };
+                }
+            }
+        }
+
+        private static IEnumerable<JObject> Objects(JToken array) => array is JArray items ? items.OfType<JObject>() : Enumerable.Empty<JObject>();
 
         public static SettingsLoadResult Load(JObject saved) =>
             Load(saved, Migrations, PluginSettings.CurrentVersion, OldestMigratableVersion);

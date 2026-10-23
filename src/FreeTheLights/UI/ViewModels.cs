@@ -198,10 +198,16 @@ namespace FreeTheLights.UI
         public ObservableCollection<TargetOption> ProximityTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> AbsTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> TcTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> IdleTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> EngineTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> PitLimiterTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<LayerItem> Layers { get; } = new ObservableCollection<LayerItem>();
 
         /// <summary>The part has a row of LEDs, the only kind RPM lights can use (else the RPM tab is hidden).</summary>
         public bool HasRpmTargets => RpmTargets.Count > 0;
+
+        /// <summary>The part has front plate elements (buttons, lights, dials): the animation tabs offer to include them.</summary>
+        public bool HasElements => Part.Elements.Any();
 
         /// <summary>One line under the device name, e.g. "31 LEDs · 3 LED groups · 10 front plate elements".</summary>
         public string HeaderSummary
@@ -342,6 +348,9 @@ namespace FreeTheLights.UI
                 case LayerKind.Proximity: return ProximityTargets;
                 case LayerKind.Abs: return AbsTargets;
                 case LayerKind.TractionControl: return TcTargets;
+                case LayerKind.Idle: return IdleTargets;
+                case LayerKind.Engine: return EngineTargets;
+                case LayerKind.PitLimiter: return PitLimiterTargets;
                 default: return null;
             }
         }
@@ -355,6 +364,7 @@ namespace FreeTheLights.UI
             }
 
             OnPropertyChanged(nameof(HasRpmTargets));
+            OnPropertyChanged(nameof(HasElements));
         }
 
         private void Fill(ObservableCollection<TargetOption> options, FeatureSettingsBase feature)
@@ -395,6 +405,8 @@ namespace FreeTheLights.UI
             RemoveDeviceCommand = new RelayCommand(_ => RemoveDevice(), _ => SelectedDevice != null);
             ReloadCarDataCommand = new RelayCommand(_ => Plugin.CarData.Reload());
             ClearTestsCommand = new RelayCommand(_ => TestMode.Clear());
+            EngineStartCommand = new RelayCommand(_ => TestMode.RequestEngineStart());
+            EngineStopCommand = new RelayCommand(_ => TestMode.RequestEngineStop());
             // No CanExecute: the button only shows while an update can be installed (CanInstallUpdate), and WPF would only
             // ask again on its next requery, leaving the button disabled after the status changed.
             InstallUpdateCommand = new RelayCommand(_ => InstallUpdate());
@@ -539,6 +551,10 @@ namespace FreeTheLights.UI
         public ICommand RemoveDeviceCommand { get; }
         public ICommand ReloadCarDataCommand { get; }
         public ICommand ClearTestsCommand { get; }
+
+        public ICommand EngineStartCommand { get; }
+
+        public ICommand EngineStopCommand { get; }
         public ICommand InstallUpdateCommand { get; }
         public ICommand CheckForUpdatesNowCommand { get; }
         public ICommand OpenReleaseNotesCommand { get; }
@@ -672,6 +688,10 @@ namespace FreeTheLights.UI
         public Array GroupSides => Enum.GetValues(typeof(LedGroupSide));
         public Array FallbackModes => Enum.GetValues(typeof(RpmFallbackMode));
         public Array FillOrigins => Enum.GetValues(typeof(FillOrigin));
+        public Array IdleAnimations => Enum.GetValues(typeof(IdleAnimation));
+        public Array AnimationColorModes => Enum.GetValues(typeof(AnimationColorMode));
+        public Array EngineAnimations => Enum.GetValues(typeof(EngineAnimation));
+        public Array PitLimiterAnimations => Enum.GetValues(typeof(PitLimiterAnimation));
 
         /// <summary>Called periodically by the view to refresh status texts.</summary>
         public void RefreshStatus()
