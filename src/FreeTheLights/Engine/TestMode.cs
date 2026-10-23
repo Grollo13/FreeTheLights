@@ -27,6 +27,7 @@ namespace FreeTheLights.Engine
         private bool rpmSweep;
         private bool press;
         private bool idle;
+        private bool pitLimiter;
 
         /// <summary>Engine start/stop asked for by the UI (1 = pending), stamped with the game loop's time in <see cref="Apply"/>.</summary>
         private int engineStartRequested;
@@ -62,6 +63,9 @@ namespace FreeTheLights.Engine
 
         /// <summary>Every front plate element with a press color shows it, as if its button were held.</summary>
         public bool Press { get => press; set => Set(ref press, value); }
+
+        /// <summary>The pit limiter is on.</summary>
+        public bool PitLimiter { get => pitLimiter; set => Set(ref pitLimiter, value); }
 
         /// <summary>The idle animation shows, also while a game runs.</summary>
         public bool Idle { get => idle; set => Set(ref idle, value); }
@@ -107,11 +111,11 @@ namespace FreeTheLights.Engine
         public bool AnyActive => AnyFeatureTest || Idle || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
 
         /// <summary>A test of a game feature is on: the idle animation then gives way, so it doesn't hide the test.</summary>
-        private bool AnyFeatureTest => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press;
+        private bool AnyFeatureTest => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press || PitLimiter;
 
         public void Clear()
         {
-            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = Idle = false;
+            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = PitLimiter = Idle = false;
             WiringPartId = Guid.Empty;
             ConfirmationDeviceId = Guid.Empty;
         }
@@ -129,6 +133,7 @@ namespace FreeTheLights.Engine
             t.AbsActive |= Abs;
             t.TcActive |= Tc;
             t.SimulatePress |= Press;
+            t.PitLimiter |= PitLimiter;
             t.Idle = Idle || (!t.GameRunning && !AnyFeatureTest);
 
             if (Interlocked.Exchange(ref engineStartRequested, 0) != 0) engineStartedAtMs = nowMs;

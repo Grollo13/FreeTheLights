@@ -69,6 +69,7 @@ namespace FreeTheLights.Engine
             [LayerKind.Press] = (d, g, l, t, p, now) => RenderPress(g, l, t, now),
             [LayerKind.Idle] = (d, g, l, t, p, now) => RenderIdle(d, d.Idle, g, l, t, now),
             [LayerKind.Engine] = (d, g, l, t, p, now) => RenderEngine(d, d.Engine, g, l, t, now),
+            [LayerKind.PitLimiter] = (d, g, l, t, p, now) => RenderPitLimiter(d, d.PitLimiter, g, l, t, now),
         };
 
         /// <summary>Whether the renderer draws <paramref name="kind"/>'s layer; a feature without a renderer stays dark.</summary>
@@ -466,6 +467,61 @@ namespace FreeTheLights.Engine
                 }
 
                 return Animations.Shade(Color, brightness);
+            }
+        }
+
+        // ---------- Pit limiter ----------
+
+        /// <summary>LEDs per stripe of the <see cref="PitLimiterAnimation.Scroll"/> animation.</summary>
+        public const int PitStripeLeds = 2;
+
+        public static void RenderPitLimiter(DevicePart part, PitLimiterSettings settings, LedGroup group, LedColor[] layer, TelemetrySnapshot t, long nowMs)
+        {
+            if (!t.PitLimiter) return;
+            var color2 = LedColor.ParseCached(settings.Color2);
+            var sampler = new PitLimiterSampler
+            {
+                Animation = settings.Animation,
+                Color = LedColor.ParseCached(settings.Color),
+                Color2 = color2.IsTransparent ? LedColor.Off : color2,
+                Steps = nowMs / settings.IntervalMs,
+            };
+            Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
+        }
+
+        private struct PitLimiterSampler : Animations.ISampler
+        {
+            public PitLimiterAnimation Animation;
+            public LedColor Color;
+            public LedColor Color2;
+
+            /// <summary>Intervals passed so far.</summary>
+            public long Steps;
+
+            public LedColor Sample(double position, double step)
+            {
+                bool first;
+                switch (Animation)
+                {
+                    case PitLimiterAnimation.Alternate:
+                        first = position < 0.5 == (Steps % 2 == 0);
+                        break;
+                    case PitLimiterAnimation.Scroll:
+                    {
+                        // The stripes move one LED per interval, towards the end.
+                        var index = (long)Math.Floor(position / step) - Steps;
+                        var stripe = (index >= 0 ? index : index - PitStripeLeds + 1) / PitStripeLeds;
+                        first = stripe % 2 == 0;
+                        break;
+                    }
+
+                    default:
+                        first = Steps % 2 == 0;
+                        break;
+                }
+
+                var color = first ? Color : Color2;
+                return color.IsTransparent ? LedColor.Off : color;
             }
         }
     }

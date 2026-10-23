@@ -625,5 +625,69 @@ namespace FreeTheLights.Tests
             tests.Apply(stop, null, 7000);
             Assert.Equal(7000, stop.EngineStoppedAtMs);
         }
+
+        // ---------- Pit limiter ----------
+
+        private static readonly LedColor White = LedColor.FromRgb(255, 255, 255);
+
+        /// <summary>A part with one row of eight LEDs and only the pit limiter on (red and white, 100 ms steps).</summary>
+        private static DevicePart PitRow(PitLimiterAnimation animation)
+        {
+            var part = new DevicePart();
+            part.EnsureDefaults();
+            part.AddGroup(new LedGroup { Kind = LedGroupKind.HorizontalRow, Count = 8 });
+            foreach (var feature in part.Features) feature.Enabled = feature == part.PitLimiter;
+            part.PitLimiter.Animation = animation;
+            part.PitLimiter.Color = "#FFFF0000";
+            part.PitLimiter.Color2 = "#FFFFFFFF";
+            part.PitLimiter.IntervalMs = 100;
+            return part;
+        }
+
+        [Fact]
+        public void Pit_limiter_shows_only_while_on()
+        {
+            var part = PitRow(PitLimiterAnimation.Blink);
+            Assert.All(FrameRenderer.Render(part, new TelemetrySnapshot(), null, 0), c => Assert.True(c.IsTransparent));
+
+            var on = new TelemetrySnapshot { PitLimiter = true };
+            Assert.All(FrameRenderer.Render(part, on, null, 50), c => Assert.Equal(Red, c));
+            Assert.All(FrameRenderer.Render(part, on, null, 150), c => Assert.Equal(White, c));
+
+            // Without a second color the off phase is dark.
+            part.PitLimiter.Color2 = "";
+            Assert.All(FrameRenderer.Render(part, on, null, 150), c => Assert.Equal(LedColor.Off, c));
+        }
+
+        [Fact]
+        public void Pit_limiter_halves_alternate()
+        {
+            var part = PitRow(PitLimiterAnimation.Alternate);
+            var on = new TelemetrySnapshot { PitLimiter = true };
+            Assert.Equal(new[] { Red, Red, Red, Red, White, White, White, White }, FrameRenderer.Render(part, on, null, 50));
+            Assert.Equal(new[] { White, White, White, White, Red, Red, Red, Red }, FrameRenderer.Render(part, on, null, 150));
+
+            part.PitLimiter.Mirror = true;
+            Assert.Equal(new[] { White, White, Red, Red, Red, Red, White, White }, FrameRenderer.Render(part, on, null, 50));
+        }
+
+        [Fact]
+        public void Pit_limiter_stripes_march_along()
+        {
+            var part = PitRow(PitLimiterAnimation.Scroll);
+            var on = new TelemetrySnapshot { PitLimiter = true };
+            Assert.Equal(new[] { Red, Red, White, White, Red, Red, White, White }, FrameRenderer.Render(part, on, null, 50));
+            Assert.Equal(new[] { White, Red, Red, White, White, Red, Red, White }, FrameRenderer.Render(part, on, null, 150));
+        }
+
+        [Fact]
+        public void Pit_limiter_test_turns_it_on()
+        {
+            var tests = new TestMode { PitLimiter = true };
+            var t = new TelemetrySnapshot();
+            tests.Apply(t, null, 0);
+            Assert.True(t.PitLimiter);
+            Assert.False(t.Idle);
+        }
     }
 }

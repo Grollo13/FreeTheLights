@@ -118,6 +118,7 @@ namespace FreeTheLights.UI
                 case LayerKind.Press: return PackIconMaterialKind.GestureTapButton;
                 case LayerKind.Idle: return PackIconMaterialKind.Sleep;
                 case LayerKind.Engine: return PackIconMaterialKind.Engine;
+                case LayerKind.PitLimiter: return PackIconMaterialKind.SpeedometerSlow;
                 default: return PackIconMaterialKind.Layers;
             }
         }

@@ -27,6 +27,9 @@ namespace FreeTheLights.Settings
 
         /// <summary>The animations when the engine starts or stops.</summary>
         Engine = 8,
+
+        /// <summary>The animation while the pit limiter is on.</summary>
+        PitLimiter = 9,
     }
 
     /// <summary>
@@ -120,6 +123,9 @@ namespace FreeTheLights.Settings
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public EngineSettings Engine { get; set; } = new EngineSettings();
 
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public PitLimiterSettings PitLimiter { get; set; } = new PitLimiterSettings();
+
         /// <summary>Which presets the front plate elements were created from (see <see cref="ApplyFrontPlate"/>).</summary>
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public FrontPlateLayout FrontPlate { get; set; } = new FrontPlateLayout();
@@ -136,6 +142,7 @@ namespace FreeTheLights.Settings
             new FeatureInfo(LayerKind.Proximity, "Car proximity", d => d.Proximity),
             new FeatureInfo(LayerKind.Abs, "ABS", d => d.Abs),
             new FeatureInfo(LayerKind.TractionControl, "Traction control", d => d.TractionControl),
+            new FeatureInfo(LayerKind.PitLimiter, "Pit limiter", d => d.PitLimiter),
             new FeatureInfo(LayerKind.Engine, "Engine start and stop", d => d.Engine),
             new FeatureInfo(LayerKind.Rpm, "RPM", d => d.Rpm),
             new FeatureInfo(LayerKind.Idle, "Idle", d => d.Idle),
@@ -217,6 +224,8 @@ namespace FreeTheLights.Settings
             if (Engine == null) Engine = new EngineSettings();
             if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StartAnimation)) Engine.StartAnimation = EngineAnimation.Sweep;
             if (!Enum.IsDefined(typeof(EngineAnimation), Engine.StopAnimation)) Engine.StopAnimation = EngineAnimation.Drain;
+            if (PitLimiter == null) PitLimiter = new PitLimiterSettings();
+            if (!Enum.IsDefined(typeof(PitLimiterAnimation), PitLimiter.Animation)) PitLimiter.Animation = PitLimiterAnimation.Alternate;
             if (FrontPlate == null) FrontPlate = new FrontPlateLayout();
             foreach (var feature in Features)
             {

@@ -449,4 +449,37 @@ namespace FreeTheLights.Settings
         /// <summary>How long each animation plays.</summary>
         public int DurationMs { get => durationMs; set => Set(ref durationMs, Math.Max(300, Math.Min(5000, value))); }
     }
+
+    /// <summary>What the LEDs show while the pit limiter is on. Values are explicit because they are stored in the settings; never renumber them.</summary>
+    public enum PitLimiterAnimation
+    {
+        /// <summary>All LEDs switch between color 1 and color 2.</summary>
+        Blink = 0,
+
+        /// <summary>The two halves of the LEDs swap color 1 and color 2.</summary>
+        Alternate = 1,
+
+        /// <summary>Stripes of color 1 and color 2 march along the LEDs.</summary>
+        Scroll = 2,
+    }
+
+    /// <summary>The animation while the pit limiter is on.</summary>
+    public class PitLimiterSettings : AnimationSettingsBase
+    {
+        private PitLimiterAnimation animation = PitLimiterAnimation.Alternate;
+        private string color = "#FF0060FF";
+        private string color2 = string.Empty;
+        private int intervalMs = 250;
+
+        public PitLimiterAnimation Animation { get => animation; set => Set(ref animation, value); }
+
+        /// <summary>Color 1.</summary>
+        public string Color { get => color; set => Set(ref color, value); }
+
+        /// <summary>Color 2; empty = dark.</summary>
+        public string Color2 { get => color2; set => Set(ref color2, value ?? string.Empty); }
+
+        /// <summary>How long each step lasts: a blink phase, a swap of the halves, a stripe moving one LED.</summary>
+        public int IntervalMs { get => intervalMs; set => Set(ref intervalMs, Math.Max(50, Math.Min(2000, value))); }
+    }
 }

@@ -200,6 +200,7 @@ namespace FreeTheLights.UI
         public ObservableCollection<TargetOption> TcTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> IdleTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> EngineTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> PitLimiterTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<LayerItem> Layers { get; } = new ObservableCollection<LayerItem>();
 
         /// <summary>The part has a row of LEDs, the only kind RPM lights can use (else the RPM tab is hidden).</summary>
@@ -349,6 +350,7 @@ namespace FreeTheLights.UI
                 case LayerKind.TractionControl: return TcTargets;
                 case LayerKind.Idle: return IdleTargets;
                 case LayerKind.Engine: return EngineTargets;
+                case LayerKind.PitLimiter: return PitLimiterTargets;
                 default: return null;
             }
         }
@@ -689,6 +691,7 @@ namespace FreeTheLights.UI
         public Array IdleAnimations => Enum.GetValues(typeof(IdleAnimation));
         public Array AnimationColorModes => Enum.GetValues(typeof(AnimationColorMode));
         public Array EngineAnimations => Enum.GetValues(typeof(EngineAnimation));
+        public Array PitLimiterAnimations => Enum.GetValues(typeof(PitLimiterAnimation));
 
         /// <summary>Called periodically by the view to refresh status texts.</summary>
         public void RefreshStatus()
