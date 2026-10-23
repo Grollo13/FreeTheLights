@@ -149,7 +149,7 @@ namespace FreeTheLights.Settings
         /// as intended (a property renamed, moved or reinterpreted, an enum value changed), and add the migration from
         /// the previous version to <see cref="SettingsMigrator.Migrations"/>.
         /// </summary>
-        public const int CurrentVersion = 4;
+        public const int CurrentVersion = 5;
 
         /// <summary>Format version of the settings. <see cref="SettingsMigrator"/> reads it from the saved JSON.</summary>
         public int SettingsVersion { get; set; } = CurrentVersion;

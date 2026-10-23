@@ -47,6 +47,27 @@ namespace FreeTheLights.Tests
             }
         }
 
+        [Fact]
+        public void Format_4_devices_get_the_animations_on_their_rows_columns_and_matrices()
+        {
+            var saved = JObject.Parse(File.ReadAllText(FixturePath(4)));
+            var settings = SettingsMigrator.Load(saved).Settings;
+
+            foreach (var part in settings.Devices.SelectMany(d => d.Parts))
+            {
+                var leds = part.Groups.Where(g => !g.IsElement).Select(g => g.Id).ToList();
+                foreach (var animation in new AnimationSettingsBase[] { part.Idle, part.Engine, part.PitLimiter })
+                {
+                    Assert.True(animation.Enabled);
+                    Assert.Equal(leds, animation.TargetGroupIds);
+                    Assert.All(part.Elements, e => Assert.True(animation.Targets(e)));
+                }
+
+                // The layers sit where a new device has them.
+                Assert.Equal(DevicePart.AllFeatures.Select(f => f.Kind), part.LayerPriority);
+            }
+        }
+
         // ---------- How migrations are applied ----------
 
         private static JObject Saved(int version) =>
