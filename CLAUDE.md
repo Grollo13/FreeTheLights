@@ -100,7 +100,7 @@ SimHub LED editor → Effect/FreeTheLightsEffect (LED strips) or FreeTheLightsMa
 - **Flags** (`FlagSettings`): an ordered list of `FlagRule`s, one per `FlagKind`; the first enabled rule whose flag is active wins (`FrameRenderer.ActiveFlag`). Each rule has color 1, an optional color 2 (`""` = single color), a `FlagPattern` (how two colors are arranged; matrices get checkerboards/diagonals) and a `FlagAnimation` (steady, blink, swap colors). `FlagSettings.DefaultOrder` is the default priority; `EnsureDefaults` adds rules for new kinds.
   - Flag sources: Yellow, Blue, White, Black, Checkered, Green and Orange (meatball) come from SimHub's common `Flag_*` telemetry (Black does exist there). **Debris** has no common field: `FreeTheLightsPlugin.IsIRacingDebris` reads `DataCorePlugin.GameRawData.Telemetry.SessionFlags` while iRacing runs and `Core/IRacingSessionFlags` decodes bit `0x40`; other games never report it.
   - `FlagKind` value 3 was the removed black/white flag; don't reuse it.
-- **Proximity** (`ProximitySettings`): the spotter's car left/right; rows fill from the side of the other car, columns per `FillOrigin`; optionally more LEDs the closer the car (`SpotterCar*Distance`, assumed meters; 0/NaN = unknown → all LEDs). Left/right elements react to their side, dials to both.
+- **Proximity** (`ProximitySettings`): the spotter's car left/right; rows fill from the side of the other car, columns per `FillOrigin`; optionally more LEDs the closer the car (`SpotterCar*Distance`, in meters; 0/NaN = unknown → all LEDs). Left/right elements react to their side, dials to both.
 - **ABS / TC** (`IndicatorSettings`): lit while active; `PluginSettings.IndicatorHoldMs` holds single-frame activations.
 - **Static colors** (`StaticColorSettings`): the elements' own colors, lowest layer; switched per part in the inspector.
 - **Press colors** (`PressSettings`, front plate elements only): an element's `PressColor` while the input of one of its `InputSlots` is held. Buttons show it exactly while held. Dials show it for at least `PressSettings.DialMinimumOnMs` (50 ms) after each step (`InputState.IsHeldOrPressedWithin`, press times from the game loop's clock), because an encoder step can be pressed and released within one game loop frame. Empty color or no inputs = no reaction; black turns the LED off.
@@ -202,18 +202,9 @@ SimHub LED editor → Effect/FreeTheLightsEffect (LED strips) or FreeTheLightsMa
   - **Two JSON shapes:** saved device files and `.shdevice` defaults wrap the channels in `"Settings"` (`{ "Settings": { "LEDS": { "leds": … } } }`), but `DeviceInstance.GetSettings` returns only that inner object: `{ "LEDS": …, "LCD": … }` for composite devices (one key per component), `{ "buttons": … }` for others. `SimHubProfiles` accepts both; test with the runtime shape, not just with files.
 
 ## Not yet verified in a running SimHub
-These assumptions still need a check in a live SimHub session with a game:
-- whether `DataUpdate` runs while no game is running (the test buttons depend on it; without it, the frame age check also turns the static colors off outside a game)
-- the units of `SpotterCarLeftDistance` and `SpotterCarRightDistance` (assumed meters)
-- how the wizard dialog and mouse drag & drop behave inside SimHub
+These assumptions still need a check in a live SimHub session:
 - the matrix effect on a real LED flag device
-- SimHub presets: the photo positions of the button LEDs on real hardware, and whether `DeviceInstance.SetSettings` (one-click Connect) applies and persists the added effect
-- whether the dashboard LED positions from SimHub's pictures match the real wiring order (the picture can't tell which side is wired first)
+- SimHub presets: the photo positions of the button LEDs on real hardware (not yet checked for every wheel)
+- whether the dashboard LED positions from SimHub's pictures match the real wiring order (the picture can't tell which side is wired first); confirmed for the Ascher 5" dashboards only
 - dragging LEDs in the LED positions dialog inside SimHub
 - the effect's part picker in SimHub's LED editor
-- the preview's click selection and the inspector panel inside SimHub (mouse input through the preview's `Viewbox`, keyboard focus, Ctrl/Shift-click)
-- the iRacing debris flag: that `DataCorePlugin.GameRawData.Telemetry.SessionFlags` exists under that name while iRacing runs and converts to a number
-- the wiring test pattern on real hardware (it also depends on `DataUpdate` running outside a game)
-- press colors: that `PluginManager.InputPressed`/`InputReleased` fire for wheel buttons and encoder steps of real wheels, the input names they carry, that capturing an input in the inspector works inside SimHub, and whether 50 ms is a good minimum on-time for dial steps
-- the wizard's steps on the real device: Connect from inside the wizard dialog, restoring SimHub's settings when the wizard is cancelled after Connect, the green confirmation on the device, the test pattern while the wizard is open (it also depends on `DataUpdate` running outside a game), the button to press lighting up on the device, assigning inputs by pressing them (and whether the 400 ms lockout after an assigned input is right)
-- plugin updates: that `Assembly.Location` is the DLL in SimHub's folder (no shadow copy), renaming it while SimHub runs, the UAC prompt and elevated install under `Program Files (x86)`, SimHub loading the new version after a restart and `CleanupAfterUpdate` removing the `.old` file; that the update check reaches GitHub (the repository must be public: the API answers 404 to anonymous requests for a private one, which reads as "no release")
