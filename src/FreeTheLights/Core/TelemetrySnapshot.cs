@@ -31,6 +31,18 @@ namespace FreeTheLights.Core
         public bool AbsActive { get; set; }
         public bool TcActive { get; set; }
 
+        /// <summary>The pit limiter is on.</summary>
+        public bool PitLimiter { get; set; }
+
+        /// <summary>The engine runs.</summary>
+        public bool EngineRunning { get; set; }
+
+        /// <summary>When the engine last started (game loop clock); <see cref="EngineStateTracker.Never"/> = not seen.</summary>
+        public long EngineStartedAtMs { get; set; } = EngineStateTracker.Never;
+
+        /// <summary>When the engine last stopped (game loop clock); <see cref="EngineStateTracker.Never"/> = not seen.</summary>
+        public long EngineStoppedAtMs { get; set; } = EngineStateTracker.Never;
+
         public bool SpotterCarLeft { get; set; }
         public bool SpotterCarRight { get; set; }
 

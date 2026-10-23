@@ -29,6 +29,7 @@ namespace FreeTheLights
         private long lastAbsMs = long.MinValue / 2;
         private long lastTcMs = long.MinValue / 2;
         private long lastErrorLogMs = long.MinValue / 2;
+        private readonly EngineStateTracker engine = new EngineStateTracker();
 
         /// <summary>How long the debris flag isn't read after reading it failed.</summary>
         private const int DebrisRetryMs = 5000;
@@ -325,7 +326,11 @@ namespace FreeTheLights
             // Inputs also outside a game, so pressing a button can be tried in the settings.
             var t = new TelemetrySnapshot { GameName = pluginManager.GameName, Inputs = Inputs };
             var d = data.NewData;
-            if (!data.GameRunning || d == null) return t;
+            if (!data.GameRunning || d == null)
+            {
+                engine.Reset();
+                return t;
+            }
 
             t.GameRunning = true;
             t.CarId = d.CarId;
@@ -355,6 +360,14 @@ namespace FreeTheLights
             if (d.TCActive != 0) lastTcMs = nowMs;
             t.AbsActive = nowMs - lastAbsMs <= Settings.IndicatorHoldMs;
             t.TcActive = nowMs - lastTcMs <= Settings.IndicatorHoldMs;
+
+            t.PitLimiter = d.PitLimiterOn != 0;
+
+            // Not every game reports EngineStarted; a turning engine runs, too.
+            engine.Update(true, d.CarId, d.EngineStarted != 0 || d.Rpms > 0, nowMs);
+            t.EngineRunning = engine.IsRunning;
+            t.EngineStartedAtMs = engine.StartedAtMs;
+            t.EngineStoppedAtMs = engine.StoppedAtMs;
 
             return t;
         }

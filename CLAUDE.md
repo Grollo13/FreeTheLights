@@ -41,7 +41,7 @@ XUNIT="$HOME/.nuget/packages/xunit.runner.console/2.9.3/tools/net48/xunit.consol
 - **C# version:** `LangVersion` is 7.3. Don't use records, `init`, or other features that need newer runtime support.
 - **Build warnings:** the build is expected to finish with zero warnings.
 - **Line endings:** most files use CRLF; keep each file's line endings when editing (a script that rewrites a whole file must write them back the same way). Some older files are LF.
-- **Tests:** `tests/FreeTheLights.Tests` (xunit 2.9.3, classic csproj: add new test files to it). One file per area: `FrameRendererTests` (features and flags), `LedResamplerTests`/`CarDataTests`/`CarDataVersionTests` (RPM and car data), `LayoutTests`/`FrontPlateTests` (groups, elements, press colors), `InputStateTests` (input state), `SettingsTests` (persistence, enum pinning), `SettingsMigrationTests` (format migrations), `PresetTests` (SimHub presets, profiles, Connect), `DashPhotoTests` (dashboard pictures), `InspectorTests` (preview inspector), `PreviewLayoutTests` (where the preview draws the LEDs), `WiringTests` (wiring check), `WizardTests` (wizard steps, with a fake `IWizardHost`), `ButtonAssignmentTests` (the wizard's button assignment), `LedColorTests`, `UpdateTests` (release check and plugin update). Fixtures (car files, one settings file per format) in `Fixtures/`.
+- **Tests:** `tests/FreeTheLights.Tests` (xunit 2.9.3, classic csproj: add new test files to it). One file per area: `FrameRendererTests` (features and flags), `LedResamplerTests`/`CarDataTests`/`CarDataVersionTests` (RPM and car data), `LayoutTests`/`FrontPlateTests` (groups, elements, press colors), `InputStateTests` (input state), `EngineStateTests` (engine start/stop detection), `SettingsTests` (persistence, enum pinning), `SettingsMigrationTests` (format migrations), `PresetTests` (SimHub presets, profiles, Connect), `DashPhotoTests` (dashboard pictures), `InspectorTests` (preview inspector), `PreviewLayoutTests` (where the preview draws the LEDs), `WiringTests` (wiring check), `WizardTests` (wizard steps, with a fake `IWizardHost`), `ButtonAssignmentTests` (the wizard's button assignment), `LedColorTests`, `UpdateTests` (release check and plugin update). Fixtures (car files, one settings file per format) in `Fixtures/`.
 - **Development tools** (`tools/`, see `tools/README.md`): a UI harness that renders the settings page, the wizard and dialogs off-screen to PNG files (with selectable presets and inspector selections), and the dashboard probe that maintains `DashboardLayouts.json`. Build them with `sh tools/build.sh` after the solution.
 - **Releases** (`CONTRIBUTING.md`, "Releases"): `tools/release.sh` builds and tests `main`, tags `vX.Y.Z` (the version in `AssemblyInfo.cs`) and creates the GitHub release with `FreeTheLights.dll`, `FreeTheLights.dll.sha256` and notes generated from the merged pull requests (`.github/release.yml`). It publishes to GitHub: only run it when asked.
 
@@ -50,7 +50,7 @@ XUNIT="$HOME/.nuget/packages/xunit.runner.console/2.9.3/tools/net48/xunit.consol
 ### Data flow
 ```
 SimHub game loop → FreeTheLightsPlugin.DataUpdate
-   → BuildSnapshot (GameReaderCommon.StatusDataBase → Core/TelemetrySnapshot; iRacing's debris flag from its raw session flags;
+   → BuildSnapshot (GameReaderCommon.StatusDataBase → Core/TelemetrySnapshot; iRacing's debris flag from its raw session flags; engine starts/stops from Core/EngineStateTracker;
      the shared Core/InputState, fed by PluginManager.InputPressed/InputReleased, also outside a game)
    → Engine/TestMode.Apply (simulated inputs from the test chips, OR-ed into the telemetry)
    → per render copy of a DeviceConfig (Settings/DeviceSnapshot), per DevicePart: Engine/FrameRenderer.Render → LedColor[] frame (physical LED order of the part's channel)
@@ -212,6 +212,7 @@ These assumptions still need a check in a live SimHub session with a game:
 - dragging LEDs in the LED positions dialog inside SimHub
 - the effect's part picker in SimHub's LED editor
 - the preview's click selection and the inspector panel inside SimHub (mouse input through the preview's `Viewbox`, keyboard focus, Ctrl/Shift-click)
+- engine start/stop and the pit limiter: which games report `EngineStarted` and `PitLimiterOn` (engine running is `EngineStarted` or RPM above 0), and whether a stop is seen in time while the RPM spins down
 - the iRacing debris flag: that `DataCorePlugin.GameRawData.Telemetry.SessionFlags` exists under that name while iRacing runs and converts to a number
 - the wiring test pattern on real hardware (it also depends on `DataUpdate` running outside a game)
 - press colors: that `PluginManager.InputPressed`/`InputReleased` fire for wheel buttons and encoder steps of real wheels, the input names they carry, that capturing an input in the inspector works inside SimHub, and whether 50 ms is a good minimum on-time for dial steps
