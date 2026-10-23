@@ -1,0 +1,1013 @@
+<UserControl x:Class="FreeTheLights.UI.SettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:styles="clr-namespace:SimHub.Plugins.Styles;assembly=SimHub.Plugins"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:ui="clr-namespace:FreeTheLights.UI"
+             mc:Ignorable="d"
+             d:DesignWidth="1200" d:DesignHeight="900"
+             x:Name="Root">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/FreeTheLights;component/UI/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- One "show this feature on" chip (DataContext: TargetOption). -->
+            <DataTemplate x:Key="TargetTemplate">
+                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}">
+                    <CheckBox.Style>
+                        <Style TargetType="CheckBox" BasedOn="{StaticResource ChipCheck}">
+                            <Setter Property="ui:Ux.Icon" Value="DotsHorizontal" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Group.Kind}" Value="VerticalColumn">
+                                    <Setter Property="ui:Ux.Icon" Value="DotsVertical" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Group.Kind}" Value="Matrix">
+                                    <Setter Property="ui:Ux.Icon" Value="ViewGrid" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </CheckBox.Style>
+                </CheckBox>
+            </DataTemplate>
+
+            <ItemsPanelTemplate x:Key="WrapItems">
+                <WrapPanel />
+            </ItemsPanelTemplate>
+
+            <!-- Section heading inside a card: icon + caption. -->
+            <Style x:Key="CardCaption" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                <Setter Property="Margin" Value="0,0,0,10" />
+            </Style>
+
+            <!-- Small caption above a field of the LED inspector next to the preview. -->
+            <Style x:Key="InspectorLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+                <Setter Property="Margin" Value="0,0,0,5" />
+            </Style>
+
+            <!-- "Different values" note on the right of an inspector caption, for fields of several selected elements. -->
+            <Style x:Key="InspectorMixedHint" TargetType="TextBlock" BasedOn="{StaticResource Text.Hint}">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="LineHeight" Value="14" />
+                <Setter Property="Margin" Value="0,0,0,5" />
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="FontStyle" Value="Italic" />
+            </Style>
+
+            <!-- Half-width cell of the inspector's two-column field grids. -->
+            <Style x:Key="InspectorCell" TargetType="StackPanel">
+                <Setter Property="Margin" Value="4,0,4,10" />
+            </Style>
+
+            <!-- The type cell fills the row when there is no LED index next to it (several elements selected, or the LED number is fixed by SimHub's layout and shown in the subtitle). -->
+            <Style x:Key="InspectorTypeCell" TargetType="StackPanel" BasedOn="{StaticResource InspectorCell}">
+                <Setter Property="Grid.ColumnSpan" Value="2" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding CanChangeIndex}" Value="True">
+                        <Setter Property="Grid.ColumnSpan" Value="1" />
+                    </DataTrigger>
+                    <!-- Only dials selected: they have no type to choose. -->
+                    <DataTrigger Binding="{Binding ShowsType}" Value="False">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- The LED index cell moves to the first column when the type cell is hidden (only dials selected). -->
+            <Style x:Key="InspectorIndexCell" TargetType="StackPanel" BasedOn="{StaticResource InspectorCell}">
+                <Setter Property="Grid.Column" Value="1" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ShowsType}" Value="False">
+                        <Setter Property="Grid.Column" Value="0" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===================== Sidebar ===================== -->
+        <Border Grid.Column="0" Background="{StaticResource Brush.Sidebar}" BorderBrush="{StaticResource Brush.Divider}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Brand -->
+                <DockPanel DockPanel.Dock="Top" Margin="18,18,18,18">
+                    <ContentControl Style="{StaticResource IconTile}" ui:Ux.Icon="LedStripVariant" ui:Ux.Accent="{DynamicResource AccentColorBrush}" />
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="17" FontWeight="SemiBold" Text="FreeTheLights" />
+                        <TextBlock Style="{StaticResource Text.Hint}" FontSize="11" TextWrapping="Wrap" Text="Free &amp; open-source LED control for your sim rig" />
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- Plugin version and updates, car data, help -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="12,0,12,12">
+                    <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Margin="0,-6,-6,-6" ui:Ux.Icon="Refresh"
+                                        Command="{Binding CheckForUpdatesNowCommand}" ToolTip="Look for a new version now" />
+                                <Ellipse Style="{StaticResource StatusDot}" Tag="{Binding UpdateState}" Margin="0,0,8,0" />
+                                <TextBlock FontWeight="SemiBold" Text="{Binding PluginVersionText}" VerticalAlignment="Center" ToolTip="The FreeTheLights version you're using" />
+                            </DockPanel>
+                            <TextBlock Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap" Text="{Binding UpdateText}" ToolTip="{Binding UpdateDetail}"
+                                       Visibility="{Binding UpdateText, Converter={StaticResource NullToVisibility}}" />
+                            <styles:SHButtonPrimary Margin="0,8,0,0" HorizontalAlignment="Stretch" Command="{Binding InstallUpdateCommand}"
+                                                    Visibility="{Binding CanInstallUpdate, Converter={StaticResource BoolToVisibility}}"
+                                                    ToolTip="Download and install the new version. SimHub uses it after a restart.">
+                                <StackPanel Orientation="Horizontal">
+                                    <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="Download" />
+                                    <TextBlock Text="Update plugin" />
+                                </StackPanel>
+                            </styles:SHButtonPrimary>
+                            <TextBlock Margin="0,6,0,0" FontSize="12" Visibility="{Binding HasNewRelease, Converter={StaticResource BoolToVisibility}}">
+                                <Hyperlink Command="{Binding OpenReleaseNotesCommand}" Foreground="{DynamicResource AccentColorBrush}" ToolTip="Open the release notes on GitHub">What's new</Hyperlink>
+                            </TextBlock>
+                            <CheckBox Style="{StaticResource Switch}" Margin="0,8,0,0" IsChecked="{Binding CheckForUpdates}" Content="Check for updates"
+                                      ToolTip="Look for a new version on GitHub once a day" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Margin="0,-6,-6,-6" ui:Ux.Icon="Refresh"
+                                        Command="{Binding ReloadCarDataCommand}" ToolTip="Load the car data again" />
+                                <Ellipse Style="{StaticResource StatusDot}" Tag="{Binding CarDataState}" Margin="0,0,8,0" />
+                                <TextBlock FontWeight="SemiBold" Text="Car data" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap" Text="{Binding CarDataStatus}" ToolTip="{Binding CarDataVersion}" />
+                            <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Hint}" FontSize="11" Text="RPM lights for each car, from the lovely-car-data project" TextWrapping="Wrap"
+                                       ToolTip="{Binding CarDataVersion}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Expander Style="{StaticResource CardExpander}" Header="How to connect" Margin="0" ui:Ux.Icon="PowerPlug" ui:Ux.Accent="{DynamicResource AccentColorBrush}">
+                        <StackPanel TextElement.FontSize="12">
+                            <TextBlock Style="{StaticResource Text.Hint}" TextWrapping="Wrap" Margin="0,0,0,8">
+                                <Run Text="1." FontWeight="SemiBold" /> Add your device with Add device. For most devices, the wizard also sets up SimHub. If not:
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource Text.Hint}" TextWrapping="Wrap" Margin="0,0,0,8">
+                                <Run Text="2." FontWeight="SemiBold" /> In SimHub, open your device's LED editor (under Devices).
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource Text.Hint}" TextWrapping="Wrap" Margin="0,0,0,8">
+                                <Run Text="3." FontWeight="SemiBold" /> Add the <Bold>FreeTheLights</Bold> effect at the top and pick your device.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource Text.Hint}" TextWrapping="Wrap">
+                                <Run Text="4." FontWeight="SemiBold" /> Use the tests on the device page to check the LEDs.
+                            </TextBlock>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+
+                <!-- Devices (top-aligned, so the Add button follows a short list; a long list scrolls) -->
+                <DockPanel Margin="12,0,12,12" VerticalAlignment="Top">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Text.Caption}" Margin="8,0,0,8" Text="DEVICES" />
+                    <styles:SHButtonPrimary DockPanel.Dock="Bottom" Click="AddDevice_Click" Margin="0,6,0,0" HorizontalAlignment="Stretch" ToolTip="Add a device with the setup wizard">
+                        <StackPanel Orientation="Horizontal">
+                            <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="Plus" />
+                            <TextBlock Text="Add device" />
+                        </StackPanel>
+                    </styles:SHButtonPrimary>
+                    <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" ItemContainerStyle="{StaticResource DeviceListItem}"
+                             Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Style="{StaticResource IconTile}" Width="34" Height="34" FontSize="18"
+                                                    ui:Ux.Accent="{DynamicResource AccentColorBrush}"
+                                                    Opacity="{Binding Enabled, Converter={StaticResource BoolToOpacity}}">
+                                        <ui:Ux.Icon>
+                                            <MultiBinding Converter="{StaticResource DeviceIcon}">
+                                                <Binding />
+                                                <Binding Path="Type" />
+                                            </MultiBinding>
+                                        </ui:Ux.Icon>
+                                    </ContentControl>
+                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center" Opacity="{Binding Enabled, Converter={StaticResource BoolToOpacity}}">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Style="{StaticResource Text.Hint}" FontSize="11" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource DeviceSummary}">
+                                                    <Binding />
+                                                    <Binding Path="DataContext.DeviceListRevision" ElementName="Root" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="2" Style="{StaticResource Switch}" IsChecked="{Binding Enabled}" ToolTip="Device on/off" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ===================== Empty state ===================== -->
+        <StackPanel Grid.Column="1" MaxWidth="520" Margin="32" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
+            <ContentControl Style="{StaticResource IconTile}" Width="76" Height="76" FontSize="40" HorizontalAlignment="Center"
+                            ui:Ux.Icon="LedStripVariant" ui:Ux.Accent="{DynamicResource AccentColorBrush}" />
+            <TextBlock Margin="0,18,0,6" HorizontalAlignment="Center" Style="{StaticResource Text.Title}" Text="Let's light things up" />
+            <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Style="{StaticResource Text.Hint}"
+                       Text="Add your wheel, dashboard, LED bar or LED flag. A short wizard helps you set it up." />
+            <styles:SHButtonPrimary Margin="0,20,0,0" HorizontalAlignment="Center" Click="AddDevice_Click" MinWidth="180" ToolTip="Add a device with the setup wizard">
+                <StackPanel Orientation="Horizontal">
+                    <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="Plus" />
+                    <TextBlock Text="Add your first device" />
+                </StackPanel>
+            </styles:SHButtonPrimary>
+        </StackPanel>
+
+        <!-- ===================== Selected device ===================== -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="24,18,24,24">
+
+                <!-- Header -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="52" Height="52" VerticalAlignment="Center">
+                        <ContentControl Style="{StaticResource IconTile}" Width="52" Height="52" FontSize="28" ui:Ux.Accent="{DynamicResource AccentColorBrush}"
+                                        Visibility="{Binding SelectedDevice.Preset.ProductImageFile, Converter={StaticResource NullToVisibility}, ConverterParameter=Inverse}">
+                            <ui:Ux.Icon>
+                                <MultiBinding Converter="{StaticResource DeviceIcon}">
+                                    <Binding Path="SelectedDevice" />
+                                    <Binding Path="SelectedDevice.Type" />
+                                </MultiBinding>
+                            </ui:Ux.Icon>
+                        </ContentControl>
+                        <Image Source="{Binding SelectedDevice.Preset.ProductImageFile, Converter={StaticResource SimHubImage}}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"
+                               Visibility="{Binding SelectedDevice.Preset.ProductImageFile, Converter={StaticResource NullToVisibility}}" ToolTip="{Binding SelectedDevice.Preset.ProductName}" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center">
+                        <TextBox Style="{StaticResource TitleTextBox}" Text="{Binding SelectedDevice.Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="Device name" MaxWidth="460" HorizontalAlignment="Left" MinWidth="200" />
+                        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                            <Border Style="{StaticResource Badge}" VerticalAlignment="Center" Padding="10,3"
+                                    ToolTip="Kind of device">
+                                <TextBlock Text="{Binding SelectedDevice.Type, Converter={StaticResource EnumDisplay}}" />
+                            </Border>
+                            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="{Binding DeviceSummary}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding SelectedDevice.Enabled}" Content="Active" Margin="0,0,18,0" ToolTip="Turn the device's LEDs on or off" />
+                        <Button Style="{StaticResource IconButton}" ui:Ux.Icon="ImageEditOutline" Click="PlaceLeds_Click"
+                                ToolTip="Edit where the LEDs are on the picture"
+                                Visibility="{Binding CanPlaceLedsOnPhoto, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Style="{StaticResource IconButton}" ui:Ux.Icon="CloudSync" Click="RefreshFromSimHub_Click"
+                                ToolTip="Get the latest layout of this device from SimHub"
+                                Visibility="{Binding SelectedDevice.Preset, Converter={StaticResource NullToVisibility}}" />
+                        <Button Style="{StaticResource IconButton}" ui:Ux.Icon="ContentCopy" ToolTip="Duplicate device"
+                                Command="{Binding DuplicateDeviceCommand}" />
+                        <Button Style="{StaticResource IconButton.Danger}" ui:Ux.Icon="DeleteOutline" ToolTip="Remove device" Click="RemoveDevice_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Live preview with the inspector of the selected LEDs -->
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="300" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="PreviewArea" CornerRadius="10,0,0,0" Padding="24,20" MinHeight="420">
+                                <Border.Background>
+                                    <RadialGradientBrush Center="0.5,0.45" GradientOrigin="0.5,0.45" RadiusX="0.75" RadiusY="0.9">
+                                        <GradientStop Offset="0" Color="#FF1C1D22" />
+                                        <GradientStop Offset="1" Color="#FF101013" />
+                                    </RadialGradientBrush>
+                                </Border.Background>
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" MaxHeight="420" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ui:LedPreview x:Name="Preview" IsInteractive="True" />
+                                </Viewbox>
+                            </Border>
+
+                            <!-- ===== Inspector: what the clicked LEDs of the preview are set to ===== -->
+                            <!-- As tall as the preview, so the card doesn't change height (and the preview doesn't move) when the selection changes. -->
+                            <Border Grid.Column="1" BorderBrush="{StaticResource Brush.Divider}" BorderThickness="1,0,0,0" DataContext="{Binding Inspector}"
+                                    Height="{Binding ActualHeight, ElementName=PreviewArea}">
+                                <Grid>
+                                    <!-- Nothing selected -->
+                                    <StackPanel Margin="16" Visibility="{Binding IsNone, Converter={StaticResource BoolToVisibility}}">
+                                        <icons:PackIconMaterial Kind="GestureTap" Width="28" Height="28" HorizontalAlignment="Left" Opacity="0.6" Foreground="{DynamicResource AccentColorBrush}" />
+                                        <TextBlock Style="{StaticResource Text.Hint}" Margin="0,12,0,0"
+                                                   Text="Click an LED in the preview to set it up. Ctrl-click to select several buttons." />
+                                        <StackPanel Margin="0,22,0,0" Visibility="{Binding HasElements, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Style="{StaticResource InspectorLabel}" Margin="0,0,0,8" Text="SELECT ALL" />
+                                            <WrapPanel>
+                                                <Button Style="{StaticResource ChipButton}" Content="Buttons" Click="SelectAllButtons_Click" ToolTip="Select all buttons"
+                                                        Visibility="{Binding HasButtons, Converter={StaticResource BoolToVisibility}}" />
+                                                <Button Style="{StaticResource ChipButton}" Content="Lights" Click="SelectAllLights_Click" ToolTip="Select all lights"
+                                                        Visibility="{Binding HasLights, Converter={StaticResource BoolToVisibility}}" />
+                                                <Button Style="{StaticResource ChipButton}" Content="Dials" Click="SelectAllDials_Click" ToolTip="Select all dials"
+                                                        Visibility="{Binding HasDials, Converter={StaticResource BoolToVisibility}}" />
+                                                <Button Style="{StaticResource ChipButton}" Content="All" Click="SelectAllElements_Click" ToolTip="Select all buttons, lights and dials" />
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Front plate elements: one or several -->
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  Visibility="{Binding IsElements, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel Margin="16">
+                                            <!-- One element: its name, editable in place; several: "6 elements" -->
+                                            <TextBox Style="{StaticResource HeadingTextBox}" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="Element name"
+                                                     Visibility="{Binding IsSingle, Converter={StaticResource BoolToVisibility}}" />
+                                            <TextBlock Style="{StaticResource Text.Heading}" TextTrimming="CharacterEllipsis" Text="{Binding Title}"
+                                                       Visibility="{Binding IsSingle, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                                            <TextBlock Style="{StaticResource Text.Hint}" FontSize="12" Margin="0,2,0,14" Text="{Binding Subtitle}" />
+
+                                            <Grid Margin="-4,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Style="{StaticResource InspectorTypeCell}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="TYPE" />
+                                                    <ComboBox ItemsSource="{Binding TypeChoices}" SelectedItem="{Binding Type}" ItemTemplate="{StaticResource EnumItemTemplate}"
+                                                              IsEnabled="{Binding CanChangeType}" ToolTip="Button, light or dial" />
+                                                </StackPanel>
+                                                <StackPanel Style="{StaticResource InspectorIndexCell}" Visibility="{Binding CanChangeIndex, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="LED INDEX" />
+                                                    <mah:NumericUpDown Minimum="0" Maximum="4096" Value="{Binding LedIndex}"
+                                                                       ToolTip="Which LED of the device this is (0 = first)" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <StackPanel Margin="0,0,0,12" Visibility="{Binding IsSingle, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Style="{StaticResource InspectorLabel}" Text="POSITION" />
+                                                <TextBlock Opacity="0.85" TextWrapping="Wrap" Text="{Binding Position}" />
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,0,12">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource InspectorMixedHint}" Text="different colors"
+                                                               Visibility="{Binding IsColorMixed, Converter={StaticResource BoolToVisibility}}" />
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="COLOR" />
+                                                </DockPanel>
+                                                <!-- Dimmed while the selected elements have different colors (the swatch can only show one). -->
+                                                <Grid HorizontalAlignment="Left">
+                                                    <Grid.Style>
+                                                        <Style TargetType="Grid">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsColorMixed}" Value="True">
+                                                                    <Setter Property="Opacity" Value="0.45" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Grid.Style>
+                                                    <ui:ColorPickerButton ColorHex="{Binding StaticColor}" AllowNone="True"
+                                                                          ToolTip="Color when nothing else is shown" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,0,12">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource InspectorMixedHint}" Text="different effects"
+                                                               Visibility="{Binding IsEffectMixed, Converter={StaticResource BoolToVisibility}}" />
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="EFFECT" />
+                                                </DockPanel>
+                                                <ComboBox ItemsSource="{Binding EffectChoices}" SelectedItem="{Binding Effect}" DisplayMemberPath="Name"
+                                                          ToolTip="What this LED shows while driving, e.g. flags" />
+                                            </StackPanel>
+
+                                            <!-- Buttons and dials only: lights are never pressed -->
+                                            <StackPanel Margin="0,0,0,12" Visibility="{Binding CanPress, Converter={StaticResource BoolToVisibility}}">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource InspectorMixedHint}" Text="different colors"
+                                                               Visibility="{Binding IsPressColorMixed, Converter={StaticResource BoolToVisibility}}" />
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="WHEN PRESSED" />
+                                                </DockPanel>
+                                                <Grid HorizontalAlignment="Left">
+                                                    <Grid.Style>
+                                                        <Style TargetType="Grid">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsPressColorMixed}" Value="True">
+                                                                    <Setter Property="Opacity" Value="0.45" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Grid.Style>
+                                                    <ui:ColorPickerButton ColorHex="{Binding PressColor}" AllowNone="True"
+                                                                          ToolTip="Color while you press the button or turn the dial" />
+                                                </Grid>
+                                            </StackPanel>
+
+                                            <!-- The inputs that press the element (one button or dial at a time): a button has one, a dial one per direction -->
+                                            <StackPanel Margin="0,0,0,12" Visibility="{Binding HasInputSlots, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Style="{StaticResource InspectorLabel}" Text="INPUT" />
+                                                <ItemsControl ItemsSource="{Binding InputSlots}" Focusable="False">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{StaticResource Brush.Row}" CornerRadius="6" Padding="10,6,6,6" Margin="0,0,0,6" ToolTip="{Binding Name}">
+                                                                <DockPanel>
+                                                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <Button Style="{StaticResource ChipButton}" Margin="0" Content="{Binding AssignText}" Click="AssignInput_Click"
+                                                                                IsEnabled="{Binding CanAssign}" ToolTip="Click, then press the button or turn the dial"
+                                                                                Visibility="{Binding IsCapturing, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                                                                        <Button Style="{StaticResource ChipButton}" Margin="0" Content="Cancel" Click="CancelCapture_Click" ToolTip="Stop waiting for a button"
+                                                                                Visibility="{Binding IsCapturing, Converter={StaticResource BoolToVisibility}}" />
+                                                                        <Button Style="{StaticResource IconButton}" Width="26" Height="26" Margin="2,0,0,0" ui:Ux.Icon="Close"
+                                                                                Click="ClearInput_Click" ToolTip="Remove this input"
+                                                                                Visibility="{Binding IsAssigned, Converter={StaticResource BoolToVisibility}}" />
+                                                                    </StackPanel>
+                                                                    <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                                                                        <TextBlock Style="{StaticResource Text.Hint}" FontSize="11" Text="{Binding Label}" />
+                                                                        <TextBlock TextWrapping="Wrap" Text="{Binding Text}">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsAssigned}" Value="False">
+                                                                                            <Setter Property="Opacity" Value="0.6" />
+                                                                                            <Setter Property="FontStyle" Value="Italic" />
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                                                                            <Setter Property="Opacity" Value="1" />
+                                                                                            <Setter Property="FontStyle" Value="Normal" />
+                                                                                            <Setter Property="Foreground" Value="{x:Static ui:Theme.Press}" />
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                    </StackPanel>
+                                                                </DockPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+
+                                            <CheckBox Style="{StaticResource Switch}" Margin="0,8,0,0" IsChecked="{Binding Part.StaticColors.Enabled}" Content="Static colors"
+                                                      ToolTip="Light the buttons and lights in their colors when nothing else is shown" />
+                                            <CheckBox Style="{StaticResource Switch}" Margin="0,8,0,0" IsChecked="{Binding Part.Press.Enabled}" Content="Press colors"
+                                                      Visibility="{Binding CanPress, Converter={StaticResource BoolToVisibility}}"
+                                                      ToolTip="Light buttons and dials in their press color while you press or turn them" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <!-- A row, column or matrix -->
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  Visibility="{Binding IsGroup, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel Margin="16">
+                                            <TextBox Style="{StaticResource HeadingTextBox}" Text="{Binding Group.Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="Group name" />
+                                            <TextBlock Style="{StaticResource Text.Hint}" FontSize="12" Margin="0,2,0,14" Text="{Binding Subtitle}" />
+
+                                            <UniformGrid Columns="2" Margin="-4,0">
+                                                <StackPanel Style="{StaticResource InspectorCell}" Visibility="{Binding Group.IsMatrix, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="LEDS" />
+                                                    <mah:NumericUpDown Minimum="1" Maximum="512" Value="{Binding Group.Count}" ToolTip="Number of LEDs" />
+                                                </StackPanel>
+                                                <StackPanel Style="{StaticResource InspectorCell}" Visibility="{Binding Group.IsMatrix, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="COLUMNS" />
+                                                    <mah:NumericUpDown Minimum="1" Maximum="64" Value="{Binding Group.Columns}" ToolTip="LEDs across" />
+                                                </StackPanel>
+                                                <StackPanel Style="{StaticResource InspectorCell}" Visibility="{Binding Group.IsMatrix, Converter={StaticResource BoolToVisibility}}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="ROWS" />
+                                                    <mah:NumericUpDown Minimum="1" Maximum="64" Value="{Binding Group.Rows}" ToolTip="LEDs down" />
+                                                </StackPanel>
+                                                <StackPanel Style="{StaticResource InspectorCell}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="START INDEX" />
+                                                    <mah:NumericUpDown Minimum="0" Maximum="4096" Value="{Binding Group.StartIndex}"
+                                                                       ToolTip="Which LED of the device the group starts at (0 = first)" />
+                                                </StackPanel>
+                                                <StackPanel Style="{StaticResource InspectorCell}">
+                                                    <TextBlock Style="{StaticResource InspectorLabel}" Text="SIDE" />
+                                                    <ComboBox SelectedItem="{Binding Group.Side}" ItemsSource="{Binding DataContext.GroupSides, ElementName=Root}" ItemTemplate="{StaticResource EnumItemTemplate}"
+                                                              ToolTip="For cars next to you: left shows cars on the left, right cars on the right, center both" />
+                                                </StackPanel>
+                                            </UniformGrid>
+
+                                            <WrapPanel>
+                                                <CheckBox Margin="0,0,18,10" Style="{StaticResource Switch}" IsChecked="{Binding Group.Reversed}" Content="Reversed"
+                                                          ToolTip="Turn on if the LEDs run the other way" />
+                                                <CheckBox Margin="0,0,18,10" Style="{StaticResource Switch}" IsChecked="{Binding Group.Serpentine}" Content="Zig-zag"
+                                                          Visibility="{Binding Group.IsMatrix, Converter={StaticResource BoolToVisibility}}" ToolTip="Turn on if every other line runs the other way" />
+                                                <CheckBox Margin="0,0,18,10" Style="{StaticResource Switch}" IsChecked="{Binding Group.StartsAtBottom}" Content="Starts at bottom"
+                                                          Visibility="{Binding Group.IsMatrix, Converter={StaticResource BoolToVisibility}}" ToolTip="Turn on if the first line is at the bottom" />
+                                            </WrapPanel>
+
+                                            <TextBlock Style="{StaticResource InspectorLabel}" Margin="0,6,0,8" Text="SHOWN BY" />
+                                            <ItemsControl ItemsSource="{Binding Features}" ItemsPanel="{StaticResource WrapItems}" Focusable="False">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox Style="{StaticResource ChipCheck}" Padding="10,3" Margin="0,0,6,6" IsChecked="{Binding IsChecked}" Content="{Binding Name}"
+                                                                  ui:Ux.Icon="{Binding Kind, Converter={StaticResource LayerIcon}}" ui:Ux.Accent="{Binding Kind, Converter={StaticResource LayerAccent}}" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <DockPanel Grid.Row="1" Margin="16,10,16,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Style="{StaticResource StatusDot}" Tag="{Binding LiveState}" Margin="0,0,10,0" />
+                                <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding LiveTitle}" />
+                                <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" TextTrimming="CharacterEllipsis" Text="{Binding LiveStatus}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Two groups using the same LED index (start indices are edited in the inspector) -->
+                <Border Margin="0,0,0,16" Padding="12,9" CornerRadius="8" BorderThickness="1" BorderBrush="{x:Static ui:Theme.Warning}" Background="#22FF8A3D"
+                        DataContext="{Binding SelectedDeviceViewModel}" Visibility="{Binding HasOverlap, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                    <DockPanel>
+                        <icons:PackIconMaterial Kind="AlertOutline" Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{x:Static ui:Theme.Warning}" />
+                        <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding OverlapWarning}" />
+                    </DockPanel>
+                </Border>
+
+                <!-- SimHub setup (devices from a SimHub preset) -->
+                <Border Style="{StaticResource Card}" Visibility="{Binding HasConnections, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" ui:Ux.Icon="Refresh" ToolTip="Check again" Click="CheckConnections_Click" />
+                            <icons:PackIconMaterial Kind="PowerPlug" Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource AccentColorBrush}" />
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource Text.Heading}" Text="Connection" />
+                                <TextBlock Style="{StaticResource Text.Hint}" FontSize="12"
+                                           Text="Lets FreeTheLights control this device's LEDs in SimHub. Your other LED profiles stay as they are." TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Connections}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource RowCard}" Padding="12,8" Margin="0,0,0,4">
+                                        <DockPanel>
+                                            <styles:SHButtonSecondary DockPanel.Dock="Right" Click="ConnectPart_Click" Visibility="{Binding CanConnect, Converter={StaticResource BoolToVisibility}}" ToolTip="Let FreeTheLights control these LEDs in SimHub">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="LinkVariant" />
+                                                    <TextBlock Text="{Binding ActionText}" />
+                                                </StackPanel>
+                                            </styles:SHButtonSecondary>
+                                            <Ellipse Margin="0,0,10,0">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse" BasedOn="{StaticResource StatusDot}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding State}" Value="Connected">
+                                                                <Setter Property="Tag" Value="ok" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding State}" Value="NotConnected">
+                                                                <Setter Property="Tag" Value="warn" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding State}" Value="WrongDevice">
+                                                                <Setter Property="Tag" Value="warn" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding State}" Value="DeviceMissing">
+                                                                <Setter Property="Tag" Value="warn" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Part.Name}" />
+                                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- LED wiring: the groups' order on the LED strip; edited in the wiring dialog, with the test pattern on the device -->
+                <Border Style="{StaticResource Card}" DataContext="{Binding SelectedDeviceViewModel}"
+                        Visibility="{Binding HasWiring, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                    <DockPanel>
+                        <styles:SHButtonSecondary DockPanel.Dock="Right" VerticalAlignment="Center" Click="EditWiring_Click"
+                                                  ToolTip="Check and change the order of the LEDs">
+                            <StackPanel Style="{StaticResource ButtonContent}">
+                                <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="PencilOutline" />
+                                <TextBlock Text="Edit wiring" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </styles:SHButtonSecondary>
+                        <icons:PackIconMaterial Kind="LedStripVariant" Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource AccentColorBrush}" />
+                        <StackPanel Margin="10,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource Text.Heading}" Text="LED wiring" />
+                            <TextBlock Style="{StaticResource Text.Hint}" FontSize="12" TextWrapping="Wrap" Text="{Binding WiringSummary}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Test bench -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel DataContext="{Binding DataContext.TestMode, ElementName=Root}">
+                        <DockPanel Margin="0,0,0,12">
+                            <styles:SHButtonSecondary DockPanel.Dock="Right" Command="{Binding DataContext.ClearTestsCommand, ElementName=Root}" VerticalAlignment="Center" ToolTip="Turn off all tests">
+                                <StackPanel Orientation="Horizontal">
+                                    <icons:PackIconMaterial Style="{StaticResource ButtonIcon}" Kind="StopCircleOutline" />
+                                    <TextBlock Text="Stop all tests" />
+                                </StackPanel>
+                            </styles:SHButtonSecondary>
+                            <icons:PackIconMaterial Kind="FlaskOutline" Width="18" Height="18" VerticalAlignment="Center" Foreground="{DynamicResource AccentColorBrush}" />
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource Text.Heading}" Text="Test" />
+                                <TextBlock Style="{StaticResource Text.Hint}" FontSize="12" Text="Check the LEDs without starting a game." />
+                            </StackPanel>
+                        </DockPanel>
+                        <WrapPanel>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding RpmSweep}" ToolTip="Let the revs go up and down" ui:Ux.Icon="Speedometer" ui:Ux.Accent="{x:Static ui:Theme.Rpm}">RPM sweep</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Green}" ToolTip="Show the green flag" ui:Ux.Icon="Flag" ui:Ux.Accent="#FF00C853">Green</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Yellow}" ToolTip="Show the yellow flag" ui:Ux.Icon="Flag" ui:Ux.Accent="#FFFFD000">Yellow</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Debris}" ui:Ux.Icon="FlagVariant" ui:Ux.Accent="#FFFF5A1F" ToolTip="Debris on track (iRacing only)">Debris</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Blue}" ToolTip="Show the blue flag" ui:Ux.Icon="Flag" ui:Ux.Accent="#FF3D8BFF">Blue</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding White}" ToolTip="Show the white flag" ui:Ux.Icon="Flag" ui:Ux.Accent="#FFFFFFFF">White</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Checkered}" ToolTip="Show the checkered flag" ui:Ux.Icon="FlagCheckered" ui:Ux.Accent="#FFFFFFFF">Checkered</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Black}" ToolTip="Show the black flag" ui:Ux.Icon="FlagOutline" ui:Ux.Accent="#FFB0B0B0">Black</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Meatball}" ToolTip="Show the meatball flag (car damaged, to the pits)" ui:Ux.Icon="RecordCircle" ui:Ux.Accent="#FFFF6D00">Meatball</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding CarLeft}" ToolTip="Pretend a car is on your left" ui:Ux.Icon="ArrowLeftBoldCircleOutline" ui:Ux.Accent="{x:Static ui:Theme.Proximity}">Car left</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding CarRight}" ToolTip="Pretend a car is on your right" ui:Ux.Icon="ArrowRightBoldCircleOutline" ui:Ux.Accent="{x:Static ui:Theme.Proximity}">Car right</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Abs}" ToolTip="Pretend ABS is active" ui:Ux.Icon="CarBrakeAbs" ui:Ux.Accent="{x:Static ui:Theme.Abs}">ABS</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Tc}" ToolTip="Pretend traction control is active" ui:Ux.Icon="CarTractionControl" ui:Ux.Accent="{x:Static ui:Theme.TractionControl}">TC</ToggleButton>
+                            <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding Press}" ui:Ux.Icon="GestureTapButton" ui:Ux.Accent="{x:Static ui:Theme.Press}"
+                                          ToolTip="Show the press color of every button and dial, as if pressed">Button press</ToggleButton>
+                        </WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Style="{StaticResource Text.Label}" Text="Simulated car distance" />
+                            <Slider Width="200" Minimum="0" Maximum="10" TickFrequency="0.5" IsSnapToTickEnabled="True" Value="{Binding CarDistance}" VerticalAlignment="Center" ToolTip="How far away the pretend car is (0 = unknown)" />
+                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="{Binding CarDistance, StringFormat='{}{0:F1} m (0 = unknown)'}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===================== Part bar ===================== -->
+                <DockPanel Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" ToolTip="Brightness of this part's LEDs">
+                        <icons:PackIconMaterial Kind="Brightness6" Width="16" Height="16" Opacity="0.7" VerticalAlignment="Center" />
+                        <Slider Width="140" Margin="10,0,10,0" Minimum="0" Maximum="100" Value="{Binding SelectedPart.Brightness}" VerticalAlignment="Center" IsSnapToTickEnabled="True" TickFrequency="1" />
+                        <TextBlock Width="38" VerticalAlignment="Center" Text="{Binding SelectedPart.Brightness, StringFormat={}{0}%}" />
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding SelectedDevice.Parts}" SelectedItem="{Binding SelectedPart}" ItemContainerStyle="{StaticResource PartSwitchItem}"
+                             Visibility="{Binding HasSeveralParts, Converter={StaticResource BoolToVisibility}}" Background="Transparent" BorderThickness="0"
+                             HorizontalAlignment="Left" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Margin="8,0,0,0" Opacity="0.6" Text="{Binding TotalLeds, StringFormat={}{0} LEDs}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Style="{StaticResource Text.Caption}" Margin="0" VerticalAlignment="Center" Text="SETTINGS"
+                               Visibility="{Binding HasSeveralParts, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                </DockPanel>
+
+                <!-- ===================== Feature tabs ===================== -->
+                <TabControl x:Name="FeatureTabs" Style="{StaticResource NavTabControl}" Margin="0,6,0,0" DataContext="{Binding SelectedDeviceViewModel}">
+
+                    <!-- ===== RPM ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="RPM" Visibility="{Binding HasRpmTargets, Converter={StaticResource BoolToVisibility}}" ui:Ux.Icon="Speedometer" ui:Ux.Accent="{x:Static ui:Theme.Rpm}" ui:Ux.Status="{Binding Part.Rpm.Enabled}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="RPM" ui:Ux.Icon="Speedometer" ui:Ux.Accent="{x:Static ui:Theme.Rpm}"
+                                                    ui:Ux.Description="RPM lights like in the real car.">
+                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Part.Rpm.Enabled}" ToolTip="Show RPM lights" />
+                            </HeaderedContentControl>
+                            <StackPanel Opacity="{Binding Part.Rpm.Enabled, Converter={StaticResource BoolToOpacity}}">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="SHOW ON" />
+                                        <ItemsControl ItemsSource="{Binding RpmTargets}" ItemTemplate="{StaticResource TargetTemplate}" ItemsPanel="{StaticResource WrapItems}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="CARS WITHOUT THEIR OWN RPM LIGHTS" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="220" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Style="{StaticResource Text.Label}" Text="Show" />
+                                            <ComboBox Grid.Column="1" Width="140" Margin="0,0,0,8" HorizontalAlignment="Left" SelectedItem="{Binding Part.Rpm.FallbackMode}" ToolTip="What to show for these cars"
+                                                      ItemsSource="{Binding DataContext.FallbackModes, ElementName=Root}" ItemTemplate="{StaticResource EnumItemTemplate}" />
+                                            <TextBlock Grid.Row="1" Style="{StaticResource Text.Label}" Text="First LED lights at"
+                                                       IsEnabled="{Binding Part.Rpm.FallbackMode, Converter={StaticResource EnumEquals}, ConverterParameter=Generic}" />
+                                            <mah:NumericUpDown Grid.Row="1" Grid.Column="1" Width="140" Margin="0,0,0,8" Minimum="0" Maximum="99" Value="{Binding Part.Rpm.GenericStartPercent}" ToolTip="When the first LED lights up"
+                                                               IsEnabled="{Binding Part.Rpm.FallbackMode, Converter={StaticResource EnumEquals}, ConverterParameter=Generic}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="10,0,0,8" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="% of the redline" />
+                                            <TextBlock Grid.Row="2" Style="{StaticResource Text.Label}" Text="Redline blink" />
+                                            <mah:NumericUpDown Grid.Row="2" Grid.Column="1" Width="140" Minimum="0" Maximum="2000" Interval="10" Value="{Binding Part.Rpm.GenericBlinkIntervalMs}" ToolTip="Blink speed at the redline"
+                                                               IsEnabled="{Binding Part.Rpm.FallbackMode, Converter={StaticResource EnumEquals}, ConverterParameter=Generic}" />
+                                            <TextBlock Grid.Row="2" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms (0 = no blinking)" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ===== Flags ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="Flags" ui:Ux.Icon="Flag" ui:Ux.Accent="{x:Static ui:Theme.Flags}" ui:Ux.Status="{Binding Part.Flags.Enabled}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="Race control flags" ui:Ux.Icon="Flag" ui:Ux.Accent="{x:Static ui:Theme.Flags}"
+                                                    ui:Ux.Description="Shows the flags waved at you. If several are out, the one highest in the list wins.">
+                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Part.Flags.Enabled}" ToolTip="Show race control flags" />
+                            </HeaderedContentControl>
+                            <StackPanel Opacity="{Binding Part.Flags.Enabled, Converter={StaticResource BoolToOpacity}}">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="SHOW ON" />
+                                        <ItemsControl ItemsSource="{Binding FlagTargets}" ItemTemplate="{StaticResource TargetTemplate}" ItemsPanel="{StaticResource WrapItems}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                            <TextBlock Style="{StaticResource Text.Label}" Text="Blink interval" />
+                                            <mah:NumericUpDown Width="110" Minimum="50" Maximum="2000" Interval="50" Value="{Binding Part.Flags.BlinkIntervalMs}" ToolTip="How fast flags blink" />
+                                            <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="FLAGS · HIGHEST PRIORITY FIRST" />
+                                        <TextBlock Style="{StaticResource Text.Hint}" Margin="0,0,0,12">
+                                            Drag a flag to change the order. Hover a pattern or animation to see what it does.
+                                        </TextBlock>
+                                        <Grid Margin="11,0,0,6" Opacity="0.55" TextElement.FontSize="11">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="28" />
+                                                <ColumnDefinition Width="52" />
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="190" />
+                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="80" />
+                                                <ColumnDefinition Width="130" />
+                                                <ColumnDefinition Width="140" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="3" Text="FLAG" />
+                                            <TextBlock Grid.Column="4" Text="COLOR 1" />
+                                            <TextBlock Grid.Column="5" Text="COLOR 2" />
+                                            <TextBlock Grid.Column="6" Text="PATTERN" />
+                                            <TextBlock Grid.Column="7" Margin="8,0,0,0" Text="ANIMATION" />
+                                        </Grid>
+                                        <ItemsControl ItemsSource="{Binding Part.Flags.Rules}" ui:DragReorder.IsEnabled="True">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Style="{StaticResource RowCard}" Padding="10,6" Margin="0,0,0,4">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="28" />
+                                                                <ColumnDefinition Width="52" />
+                                                                <ColumnDefinition Width="36" />
+                                                                <ColumnDefinition Width="190" />
+                                                                <ColumnDefinition Width="80" />
+                                                                <ColumnDefinition Width="80" />
+                                                                <ColumnDefinition Width="130" />
+                                                                <ColumnDefinition Width="140" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <icons:PackIconMaterial Grid.Column="0" Style="{StaticResource Grip}" ui:DragReorder.Handle="True" />
+                                                            <CheckBox Grid.Column="1" Style="{StaticResource Switch}" IsChecked="{Binding Enabled}" ToolTip="Show this flag" />
+                                                            <!-- Flag swatch: color 1 and color 2 (or color 1 again) as a 2x2 checkerboard -->
+                                                            <Border Grid.Column="2" Width="24" Height="24" CornerRadius="4" BorderBrush="#40FFFFFF" BorderThickness="1" Padding="1" HorizontalAlignment="Left"
+                                                                    Opacity="{Binding Enabled, Converter={StaticResource BoolToOpacity}}">
+                                                                <UniformGrid Rows="2" Columns="2">
+                                                                    <Rectangle Fill="{Binding Color, Converter={StaticResource HexToBrush}}" />
+                                                                    <Rectangle>
+                                                                        <Rectangle.Fill>
+                                                                            <MultiBinding Converter="{StaticResource HexToBrush}">
+                                                                                <Binding Path="Color2" />
+                                                                                <Binding Path="Color" />
+                                                                            </MultiBinding>
+                                                                        </Rectangle.Fill>
+                                                                    </Rectangle>
+                                                                    <Rectangle>
+                                                                        <Rectangle.Fill>
+                                                                            <MultiBinding Converter="{StaticResource HexToBrush}">
+                                                                                <Binding Path="Color2" />
+                                                                                <Binding Path="Color" />
+                                                                            </MultiBinding>
+                                                                        </Rectangle.Fill>
+                                                                    </Rectangle>
+                                                                    <Rectangle Fill="{Binding Color, Converter={StaticResource HexToBrush}}" />
+                                                                </UniformGrid>
+                                                            </Border>
+                                                            <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"
+                                                                       Opacity="{Binding Enabled, Converter={StaticResource BoolToOpacity}}" />
+                                                            <ui:ColorPickerButton Grid.Column="4" ColorHex="{Binding Color}" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Main color" />
+                                                            <ui:ColorPickerButton Grid.Column="5" ColorHex="{Binding Color2}" AllowNone="True" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Second color (optional)" />
+                                                            <ComboBox Grid.Column="6" SelectedValue="{Binding Pattern}" SelectedValuePath="Value" ItemsSource="{Binding DataContext.SelectedDeviceViewModel.PatternChoices, ElementName=Root}" ItemTemplate="{StaticResource ChoiceTemplate}"
+                                                                      IsEnabled="{Binding HasSecondColor}" ToolTip="How the two colors are arranged (hover an option for details)" />
+                                                            <ComboBox Grid.Column="7" Margin="8,0,0,0" SelectedItem="{Binding Animation}" ToolTip="How the flag moves (hover an option for details)" ItemsSource="{Binding AvailableAnimations}" ItemTemplate="{StaticResource FlagOptionTemplate}" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ===== Proximity ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="Proximity" ui:Ux.Icon="CarSide" ui:Ux.Accent="{x:Static ui:Theme.Proximity}" ui:Ux.Status="{Binding Part.Proximity.Enabled}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="Car proximity" ui:Ux.Icon="CarSide" ui:Ux.Accent="{x:Static ui:Theme.Proximity}"
+                                                    ui:Ux.Description="Lights up when a car is next to you, on its side.">
+                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Part.Proximity.Enabled}" ToolTip="Show cars next to me" />
+                            </HeaderedContentControl>
+                            <StackPanel Opacity="{Binding Part.Proximity.Enabled, Converter={StaticResource BoolToOpacity}}">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="SHOW ON" />
+                                        <ItemsControl ItemsSource="{Binding ProximityTargets}" ItemTemplate="{StaticResource TargetTemplate}" ItemsPanel="{StaticResource WrapItems}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="APPEARANCE" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="220" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Style="{StaticResource Text.Label}" Text="Color" />
+                                            <ui:ColorPickerButton Grid.Column="1" Margin="0,0,0,10" HorizontalAlignment="Left" ColorHex="{Binding Part.Proximity.Color}" ToolTip="Color" />
+                                            <TextBlock Grid.Row="1" Style="{StaticResource Text.Label}" Text="Closer car, more LEDs" />
+                                            <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10" Style="{StaticResource Switch}" IsChecked="{Binding Part.Proximity.Progressive}"
+                                                      Content="On" ToolTip="Light more LEDs the closer the car gets (if the game reports the distance)" />
+                                            <TextBlock Grid.Row="2" Style="{StaticResource Text.Label}" Text="Distance for a single LED" />
+                                            <mah:NumericUpDown Grid.Row="2" Grid.Column="1" Width="120" Margin="0,0,0,10" Minimum="0.5" Maximum="50" Interval="0.5" StringFormat="F1" Value="{Binding Part.Proximity.MaxDistance}" ToolTip="At this distance only one LED lights up"
+                                                               IsEnabled="{Binding Part.Proximity.Progressive}" />
+                                            <TextBlock Grid.Row="2" Grid.Column="2" Margin="10,0,0,10" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="m" />
+                                            <TextBlock Grid.Row="3" Style="{StaticResource Text.Label}" Text="Fill from" />
+                                            <ComboBox Grid.Row="3" Grid.Column="1" Width="120" HorizontalAlignment="Left" SelectedItem="{Binding Part.Proximity.FillOrigin}" ToolTip="Start: from the bottom or the outer edge. End: from the top or the center."
+                                                      ItemsSource="{Binding DataContext.FillOrigins, ElementName=Root}" ItemTemplate="{StaticResource EnumItemTemplate}" />
+                                            <TextBlock Grid.Row="3" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" TextWrapping="Wrap"
+                                                       Text="Start: columns fill bottom-up, rows from the outer edge. End: columns fill top-down, rows from the center." />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ===== ABS ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="ABS" ui:Ux.Icon="CarBrakeAbs" ui:Ux.Accent="{x:Static ui:Theme.Abs}" ui:Ux.Status="{Binding Part.Abs.Enabled}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="ABS" ui:Ux.Icon="CarBrakeAbs" ui:Ux.Accent="{x:Static ui:Theme.Abs}"
+                                                    ui:Ux.Description="Lights up while ABS is active.">
+                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Part.Abs.Enabled}" ToolTip="Show when ABS is active" />
+                            </HeaderedContentControl>
+                            <StackPanel Opacity="{Binding Part.Abs.Enabled, Converter={StaticResource BoolToOpacity}}">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="SHOW ON" />
+                                        <ItemsControl ItemsSource="{Binding AbsTargets}" ItemTemplate="{StaticResource TargetTemplate}" ItemsPanel="{StaticResource WrapItems}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="APPEARANCE" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="220" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Style="{StaticResource Text.Label}" Text="Color" />
+                                            <ui:ColorPickerButton Grid.Column="1" Margin="0,0,0,10" HorizontalAlignment="Left" ColorHex="{Binding Part.Abs.Color}" ToolTip="Color" />
+                                            <CheckBox Grid.Row="1" Style="{StaticResource Switch}" IsChecked="{Binding Part.Abs.Blink}" Content="Blink" ToolTip="Blink instead of a steady light" />
+                                            <mah:NumericUpDown Grid.Row="1" Grid.Column="1" Width="120" Minimum="20" Maximum="1000" Interval="10" Value="{Binding Part.Abs.BlinkIntervalMs}" ToolTip="Blink speed" IsEnabled="{Binding Part.Abs.Blink}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms per phase" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ===== TC ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="Traction control" ui:Ux.Icon="CarTractionControl" ui:Ux.Accent="{x:Static ui:Theme.TractionControl}" ui:Ux.Status="{Binding Part.TractionControl.Enabled}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="Traction control" ui:Ux.Icon="CarTractionControl" ui:Ux.Accent="{x:Static ui:Theme.TractionControl}"
+                                                    ui:Ux.Description="Lights up while traction control is active.">
+                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Part.TractionControl.Enabled}" ToolTip="Show when traction control is active" />
+                            </HeaderedContentControl>
+                            <StackPanel Opacity="{Binding Part.TractionControl.Enabled, Converter={StaticResource BoolToOpacity}}">
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="SHOW ON" />
+                                        <ItemsControl ItemsSource="{Binding TcTargets}" ItemTemplate="{StaticResource TargetTemplate}" ItemsPanel="{StaticResource WrapItems}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource CardCaption}" Text="APPEARANCE" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="220" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Style="{StaticResource Text.Label}" Text="Color" />
+                                            <ui:ColorPickerButton Grid.Column="1" Margin="0,0,0,10" HorizontalAlignment="Left" ColorHex="{Binding Part.TractionControl.Color}" ToolTip="Color" />
+                                            <CheckBox Grid.Row="1" Style="{StaticResource Switch}" IsChecked="{Binding Part.TractionControl.Blink}" Content="Blink" ToolTip="Blink instead of a steady light" />
+                                            <mah:NumericUpDown Grid.Row="1" Grid.Column="1" Width="120" Minimum="20" Maximum="1000" Interval="10" Value="{Binding Part.TractionControl.BlinkIntervalMs}" ToolTip="Blink speed" IsEnabled="{Binding Part.TractionControl.Blink}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Hint}" Text="ms per phase" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ===== Priority ===== -->
+                    <TabItem Style="{StaticResource NavTab}" Header="Priority" ui:Ux.Icon="LayersTriple" ui:Ux.Accent="{x:Static ui:Theme.Priority}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource FeatureHeader}" Header="Priority" ui:Ux.Icon="LayersTriple" ui:Ux.Accent="{x:Static ui:Theme.Priority}"
+                                                    ui:Ux.Description="If several features use the same LED, the one higher in the list wins. Drag to reorder." />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MaxWidth="600" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ItemsControl ItemsSource="{Binding Layers}" AlternationCount="1000"
+                                              ui:DragReorder.IsEnabled="True" ui:DragReorder.MoveCommand="{Binding MoveLayerCommand}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource RowCard}" Padding="10,8" ui:DragReorder.Handle="True" Background="{StaticResource Brush.Card}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <icons:PackIconMaterial Style="{StaticResource Grip}" />
+                                                    <TextBlock Grid.Column="1" Width="22" Margin="0,0,8,0" VerticalAlignment="Center" TextAlignment="Center" FontWeight="SemiBold" Opacity="0.55"
+                                                               Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource IndexToRank}}" />
+                                                    <ContentControl Grid.Column="2" Style="{StaticResource IconTile}" Width="32" Height="32" FontSize="17"
+                                                                    ui:Ux.Icon="{Binding Kind, Converter={StaticResource LayerIcon}}" ui:Ux.Accent="{Binding Kind, Converter={StaticResource LayerAccent}}" />
+                                                    <TextBlock Grid.Column="3" Margin="12,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}"
+                                                               Opacity="{Binding Feature.Enabled, Converter={StaticResource BoolToOpacity}}" />
+                                                    <Border Grid.Column="4" Style="{StaticResource Badge}" Margin="8,0" Visibility="{Binding Feature.Enabled, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
+                                                        <TextBlock Text="off" Opacity="0.7" />
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

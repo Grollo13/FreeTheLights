@@ -1,0 +1,74 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. The more precisely you describe it, the faster it can be fixed.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add a device ...
+        2. Enable the flags feature ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - RPM lights
+        - Flags
+        - Proximity
+        - ABS / traction control
+        - Front plate buttons, lights and dials
+        - Settings page or preview
+        - New device wizard
+        - SimHub setup / Connect
+        - SimHub effect (LED editor)
+        - Car data
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: FreeTheLights version
+      placeholder: e.g. 0.3.0
+    validations:
+      required: true
+  - type: input
+    id: simhub-version
+    attributes:
+      label: SimHub version
+      placeholder: e.g. 9.x.x
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: The device (as listed in SimHub) and its type in FreeTheLights (wheel, dashboard, LED bar, LED flag, custom).
+  - type: input
+    id: game
+    attributes:
+      label: Game and car
+      description: Only if the problem depends on a game or car.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and screenshots
+      description: |
+        Screenshots of the settings page help a lot. Please attach SimHub's log (`Logs` folder of the SimHub install) if there is an error.
+        Settings backups in `PluginsData\Common\FreeTheLights\backups` may contain your device names; look them over before attaching.

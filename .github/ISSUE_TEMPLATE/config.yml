@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wrong or missing car LED data
+    url: https://github.com/Lovely-Sim-Racing/lovely-car-data/issues
+    about: RPM LED patterns come from lovely-car-data. Report errors in a car's data there.

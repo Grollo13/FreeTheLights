@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6C1B7E52-3F0A-4F4B-9D5E-2B8F3C7A1E01}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>FreeTheLights</RootNamespace>
+    <AssemblyName>FreeTheLights</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+    <!-- SimHub install folder: SIMHUB_INSTALL_PATH environment variable (set by SimHub), or the default location. -->
+    <SimHubPath Condition=" '$(SIMHUB_INSTALL_PATH)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(SIMHUB_INSTALL_PATH)'))</SimHubPath>
+    <SimHubPath Condition=" '$(SimHubPath)' == '' ">C:\Program Files (x86)\SimHub\</SimHubPath>
+    <!-- Set to false to skip copying the plugin into the SimHub folder after a build. -->
+    <DeployToSimHub Condition=" '$(DeployToSimHub)' == '' ">true</DeployToSimHub>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="GameReaderCommon">
+      <HintPath>$(SimHubPath)GameReaderCommon.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="log4net">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)log4net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MahApps.Metro">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)MahApps.Metro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MahApps.Metro.IconPacks.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)MahApps.Metro.IconPacks.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MahApps.Metro.IconPacks.Material">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)MahApps.Metro.IconPacks.Material.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SimHub.Logging">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SimHubPath)SimHub.Logging.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SimHub.Plugins">
+      <HintPath>$(SimHubPath)SimHub.Plugins.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Settings\DashboardLayouts.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CarData\CarDataService.cs" />
+    <Compile Include="CarData\CarDataVersion.cs" />
+    <Compile Include="CarData\CarLedProfile.cs" />
+    <Compile Include="CarData\NameNormalizer.cs" />
+    <Compile Include="Core\BackupFile.cs" />
+    <Compile Include="Core\Blink.cs" />
+    <Compile Include="Core\Debouncer.cs" />
+    <Compile Include="Core\InputState.cs" />
+    <Compile Include="Core\IRacingSessionFlags.cs" />
+    <Compile Include="Core\LedColor.cs" />
+    <Compile Include="Core\LedLimits.cs" />
+    <Compile Include="Core\ObservableObject.cs" />
+    <Compile Include="Core\TelemetrySnapshot.cs" />
+    <Compile Include="Effect\EffectEditor.xaml.cs">
+      <DependentUpon>EffectEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Effect\EffectEditorViewModel.cs" />
+    <Compile Include="Effect\FreeTheLightsEffect.cs" />
+    <Compile Include="Effect\FreeTheLightsMatrixEffect.cs" />
+    <Compile Include="Engine\ConfirmationPattern.cs" />
+    <Compile Include="Engine\FrameRenderer.cs" />
+    <Compile Include="Engine\FrameStore.cs" />
+    <Compile Include="Engine\LedResampler.cs" />
+    <Compile Include="Engine\TestMode.cs" />
+    <Compile Include="Engine\WiringPattern.cs" />
+    <Compile Include="FreeTheLightsPlugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\DashLedDetector.cs" />
+    <Compile Include="Settings\DashPhotoLayouts.cs" />
+    <Compile Include="Settings\DeviceConfig.cs" />
+    <Compile Include="Settings\DeviceKindGuess.cs" />
+    <Compile Include="Settings\DevicePart.cs" />
+    <Compile Include="Settings\PartConnection.cs" />
+    <Compile Include="Settings\DeviceSnapshot.cs" />
+    <Compile Include="Settings\FeatureSettings.cs" />
+    <Compile Include="Settings\FrontPlatePresets.cs" />
+    <Compile Include="Settings\LedGroup.cs" />
+    <Compile Include="Settings\PresetBuilder.cs" />
+    <Compile Include="Settings\SettingsMigrator.cs" />
+    <Compile Include="Settings\ShDeviceParser.cs" />
+    <Compile Include="Settings\SimHubButtonLayout.cs" />
+    <Compile Include="Settings\SimHubDeviceInfo.cs" />
+    <Compile Include="Settings\SimHubProfiles.cs" />
+    <Compile Include="SimHubData\SimHubCatalog.cs" />
+    <Compile Include="SimHubData\SimHubConnector.cs" />
+    <Compile Include="SimHubData\SimHubPaths.cs" />
+    <Compile Include="UI\ColorPickerButton.xaml.cs">
+      <DependentUpon>ColorPickerButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ButtonAssignment.cs" />
+    <Compile Include="UI\Converters.cs" />
+    <Compile Include="UI\DeviceWizard.xaml.cs">
+      <DependentUpon>DeviceWizard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DeviceWizardViewModel.cs" />
+    <Compile Include="UI\DragReorder.cs" />
+    <Compile Include="UI\IWizardHost.cs" />
+    <Compile Include="UI\LedInspector.cs" />
+    <Compile Include="UI\LedPreview.cs" />
+    <Compile Include="UI\PhotoLedDialog.xaml.cs">
+      <DependentUpon>PhotoLedDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PhotoLedPlacer.cs" />
+    <Compile Include="UI\PreviewLayout.cs" />
+    <Compile Include="UI\SettingsControl.xaml.cs">
+      <DependentUpon>SettingsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\SimHubWizardHost.cs" />
+    <Compile Include="UI\Theme.cs" />
+    <Compile Include="UI\Ux.cs" />
+    <Compile Include="UI\ViewModels.cs" />
+    <Compile Include="UI\WiringDialog.xaml.cs">
+      <DependentUpon>WiringDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\WiringEditor.cs" />
+    <Compile Include="UI\WiringEditorView.xaml.cs">
+      <DependentUpon>WiringEditorView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\WizardProfileStep.cs" />
+    <Compile Include="Updates\ReleaseInfo.cs" />
+    <Compile Include="Updates\UpdateInstaller.cs" />
+    <Compile Include="Updates\UpdateService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="UI\PhotoLedDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Effect\EffectEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\ColorPickerButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\DeviceWizard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\WiringDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\WiringEditorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\Theme.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\SettingsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Lets the project build with only the .NET Framework 4.7.2+ targeting packs / Build Tools installed. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <!-- Classic WPF projects compile XAML through a temporary "_wpftmp" project that does not get NuGet's imports,
+       so point it at the reference assemblies package directly. -->
+  <PropertyGroup>
+    <NetFx48RefPackageRoot Condition=" '$(NuGetPackageRoot)' != '' ">$(NuGetPackageRoot)</NetFx48RefPackageRoot>
+    <NetFx48RefPackageRoot Condition=" '$(NetFx48RefPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NetFx48RefPackageRoot>
+    <NetFx48RefRoot>$([MSBuild]::EnsureTrailingSlash('$(NetFx48RefPackageRoot)'))microsoft.netframework.referenceassemblies.net48\1.0.3\build\</NetFx48RefRoot>
+    <TargetFrameworkRootPath Condition=" $(MSBuildProjectName.EndsWith('_wpftmp')) And Exists('$(NetFx48RefRoot)') ">$(NetFx48RefRoot)</TargetFrameworkRootPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="DeployToSimHub" AfterTargets="Build" Condition=" '$(DeployToSimHub)' == 'true' ">
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(SimHubPath)" ContinueOnError="WarnAndContinue" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SimHubPath)" ContinueOnError="WarnAndContinue" Condition="!Exists('$(TargetDir)$(TargetName).pdb')" />
+  </Target>
+</Project>

@@ -1,0 +1,120 @@
+<!--
+    The wiring editor (WiringEditor as DataContext): the part's rows, columns and matrices in wiring order, editable, with
+    the wiring test pattern in a preview next to them. Used by the device wizard's wiring step and the device page's
+    wiring dialog.
+-->
+<UserControl x:Class="FreeTheLights.UI.WiringEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:local="clr-namespace:FreeTheLights.UI">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/FreeTheLights;component/UI/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- A row, column or matrix in the wiring step, editable: drag grip, wiring color, name, LEDs, side (columns), direction (matrices: zig-zag, first line), remove. -->
+            <DataTemplate x:Key="EditableWiringGroupItem">
+                <Border Style="{StaticResource RowCard}" Padding="10,7" Margin="0,0,0,4">
+                    <DockPanel>
+                        <icons:PackIconMaterial DockPanel.Dock="Left" Style="{StaticResource Grip}" local:DragReorder.Handle="True" />
+                        <Ellipse DockPanel.Dock="Left" Width="10" Height="10" Margin="0,0,10,0" VerticalAlignment="Center"
+                                 Fill="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource WiringColor}}" />
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton.Danger}" Width="26" Height="26" Margin="6,0,0,0" local:Ux.Icon="Close"
+                                        ToolTip="Remove this group" CommandParameter="{Binding}"
+                                        Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
+                                <Border DockPanel.Dock="Right" Style="{StaticResource Badge}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                        ToolTip="Which LEDs of the device this group uses">
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{StaticResource LedRange}">
+                                                <Binding Path="StartIndex" />
+                                                <Binding Path="LedCount" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+                                <TextBox Style="{StaticResource HeadingTextBox}" FontSize="13" VerticalAlignment="Center" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="Name" />
+                            </DockPanel>
+                            <!-- The direction switch on the right, so it lines up on every row whether or not the group has a side. -->
+                            <DockPanel Margin="0,6,0,0" LastChildFill="False">
+                                <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource WiringDirectionSwitch}" Content="Reverse" IsChecked="{Binding Reversed}" />
+                                <CheckBox DockPanel.Dock="Right" Margin="0,0,14,0" VerticalAlignment="Center" Style="{StaticResource Switch}" IsChecked="{Binding StartsAtBottom}" Content="From the bottom"
+                                          Visibility="{Binding IsMatrix, Converter={StaticResource BoolToVisibility}}" ToolTip="Turn on if the first line is at the bottom" />
+                                <CheckBox DockPanel.Dock="Right" Margin="0,0,14,0" VerticalAlignment="Center" Style="{StaticResource Switch}" IsChecked="{Binding Serpentine}" Content="Zig-zag"
+                                          Visibility="{Binding IsMatrix, Converter={StaticResource BoolToVisibility}}" ToolTip="Turn on if every other line runs the other way" />
+                                <mah:NumericUpDown DockPanel.Dock="Left" Width="96" Margin="0,0,10,0" Minimum="1" Maximum="512" Value="{Binding Count}" ToolTip="Number of LEDs"
+                                                   Visibility="{Binding IsMatrix, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}" />
+                                <ComboBox DockPanel.Dock="Left" Width="96" Margin="0,0,10,0" SelectedItem="{Binding Side}" ItemTemplate="{StaticResource EnumItemTemplate}" ToolTip="For cars next to you: left shows cars on the left, right cars on the right"
+                                          ItemsSource="{Binding DataContext.ColumnSides, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="VerticalColumn">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.Style>
+                                </ComboBox>
+                            </DockPanel>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <!-- Scrolls when the part has more groups than fit. -->
+        <ScrollViewer Grid.Column="0" Margin="0,0,20,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="0,0,6,0">
+                <ItemsControl ItemsSource="{Binding Groups}" local:DragReorder.IsEnabled="True" local:DragReorder.MoveCommand="{Binding MoveCommand}"
+                              Focusable="False" AlternationCount="1000" ItemTemplate="{StaticResource EditableWiringGroupItem}" />
+                <DockPanel Margin="0,4,0,0">
+                    <Button DockPanel.Dock="Left" Style="{StaticResource ChipButton}" Command="{Binding AddCommand}" CommandParameter="Column" ToolTip="Add a column of LEDs, e.g. on a side">
+                        <StackPanel Orientation="Horizontal">
+                            <icons:PackIconMaterial Kind="Plus" Width="11" Height="11" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Column" />
+                        </StackPanel>
+                    </Button>
+                    <Button DockPanel.Dock="Left" Style="{StaticResource ChipButton}" Command="{Binding AddCommand}" CommandParameter="Row" ToolTip="Add a row of LEDs, e.g. RPM LEDs">
+                        <StackPanel Orientation="Horizontal">
+                            <icons:PackIconMaterial Kind="Plus" Width="11" Height="11" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Row" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Text="{Binding LedSummary}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Hint}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasTooManyLeds}" Value="True">
+                                        <Setter Property="Foreground" Value="{x:Static local:Theme.Warning}" />
+                                        <Setter Property="Opacity" Value="1" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </DockPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Column="1">
+            <TextBlock Margin="0,0,0,8" Style="{StaticResource Text.Caption}" Text="PREVIEW · SHOULD MATCH YOUR DEVICE" />
+            <Border Style="{StaticResource Stage}" MaxWidth="340" HorizontalAlignment="Left">
+                <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                    <local:LedPreview x:Name="Preview" />
+                </Viewbox>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

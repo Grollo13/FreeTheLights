@@ -1,0 +1,38 @@
+{
+  "url": "https://api.github.com/repos/Grollo13/FreeTheLights/releases/250000001",
+  "html_url": "https://github.com/Grollo13/FreeTheLights/releases/tag/v0.2.0",
+  "id": 250000001,
+  "tag_name": "v0.2.0",
+  "target_commitish": "main",
+  "name": "FreeTheLights 0.2.0",
+  "draft": false,
+  "immutable": false,
+  "prerelease": false,
+  "created_at": "2026-10-20T08:00:00Z",
+  "published_at": "2026-10-20T08:05:00Z",
+  "assets": [
+    {
+      "url": "https://api.github.com/repos/Grollo13/FreeTheLights/releases/assets/300000001",
+      "id": 300000001,
+      "name": "FreeTheLights.dll",
+      "content_type": "application/x-msdownload",
+      "state": "uploaded",
+      "size": 812032,
+      "digest": "sha256:0f4d3c5e7a9b1d2f3e4a5b6c7d8e9f00112233445566778899aabbccddeeff00",
+      "browser_download_url": "https://github.com/Grollo13/FreeTheLights/releases/download/v0.2.0/FreeTheLights.dll"
+    },
+    {
+      "url": "https://api.github.com/repos/Grollo13/FreeTheLights/releases/assets/300000002",
+      "id": 300000002,
+      "name": "FreeTheLights.dll.sha256",
+      "content_type": "application/octet-stream",
+      "state": "uploaded",
+      "size": 84,
+      "digest": "sha256:aa11bb22cc33dd44ee55ff6600112233445566778899aabbccddeeff00112233",
+      "browser_download_url": "https://github.com/Grollo13/FreeTheLights/releases/download/v0.2.0/FreeTheLights.dll.sha256"
+    }
+  ],
+  "tarball_url": "https://api.github.com/repos/Grollo13/FreeTheLights/tarball/v0.2.0",
+  "zipball_url": "https://api.github.com/repos/Grollo13/FreeTheLights/zipball/v0.2.0",
+  "body": "## New features\n* Show the debris flag in iRacing by @Grollo13 in https://github.com/Grollo13/FreeTheLights/pull/13\n\n**Full Changelog**: https://github.com/Grollo13/FreeTheLights/compare/v0.1.0...v0.2.0"
+}

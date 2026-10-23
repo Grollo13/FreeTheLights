@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "process",
+            "command": "cmd.exe",
+            "args": [ "/c", "tools\\dev.cmd", "build" ],
+            "problemMatcher": "$msCompile",
+            "group": { "kind": "build", "isDefault": true },
+            "presentation": { "reveal": "silent", "panel": "shared", "clear": true }
+        },
+        {
+            "label": "build and deploy",
+            "type": "process",
+            "command": "cmd.exe",
+            "args": [ "/c", "tools\\dev.cmd", "deploy" ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+        },
+        {
+            "label": "test",
+            "type": "process",
+            "command": "cmd.exe",
+            "args": [ "/c", "tools\\dev.cmd", "test" ],
+            "problemMatcher": "$msCompile",
+            "group": { "kind": "test", "isDefault": true },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+        }
+    ]
+}
