@@ -1,8 +1,8 @@
 #!/bin/sh
 # Publishes a GitHub release of the version in src/FreeTheLights/Properties/AssemblyInfo.cs: builds and tests main,
-# tags it vX.Y.Z and creates the release with FreeTheLights.dll, its SHA-256 and notes generated from the pull
-# requests merged since the previous release (.github/release.yml). Needs the GitHub CLI (gh), logged in as an admin
-# of the repository.
+# tags it vX.Y.Z and creates the release with FreeTheLights.dll, the installer FreeTheLights-Setup-X.Y.Z.exe, their
+# SHA-256 and notes generated from the pull requests merged since the previous release (.github/release.yml). Needs the
+# GitHub CLI (gh), logged in as an admin of the repository, and Inno Setup 6 (tools/installer.sh).
 #
 #   sh tools/release.sh        publish the release
 #   sh tools/release.sh -d     create it as a draft, to review the notes before publishing it on GitHub
@@ -51,13 +51,16 @@ echo "release: FreeTheLights $VERSION from $(git rev-parse --short HEAD)"
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
 cp src/FreeTheLights/bin/Release/FreeTheLights.dll "$OUT/"
-(cd "$OUT" && sha256sum FreeTheLights.dll > FreeTheLights.dll.sha256)
-cat "$OUT/FreeTheLights.dll.sha256"
+sh "$T/installer.sh" "$OUT/FreeTheLights.dll" "$OUT" >/dev/null || fail "building the installer failed"
+SETUP="FreeTheLights-Setup-$VERSION.exe"
+[ -f "$OUT/$SETUP" ] || fail "the installer is not $SETUP: does the DLL have version $VERSION?"
+(cd "$OUT" && sha256sum FreeTheLights.dll > FreeTheLights.dll.sha256 && sha256sum "$SETUP" > "$SETUP.sha256")
+cat "$OUT/FreeTheLights.dll.sha256" "$OUT/$SETUP.sha256"
 
 # --- Tag and release ---
 git tag -a "$TAG" -m "FreeTheLights $VERSION"
 git push origin "$TAG"
-gh release create "$TAG" "$OUT/FreeTheLights.dll" "$OUT/FreeTheLights.dll.sha256" \
+gh release create "$TAG" "$OUT/FreeTheLights.dll" "$OUT/FreeTheLights.dll.sha256" "$OUT/$SETUP" "$OUT/$SETUP.sha256" \
   --repo "$REPO" --title "FreeTheLights $VERSION" --generate-notes --verify-tag $DRAFT \
   || fail "creating the release failed; the tag $TAG is pushed: run gh release create again, or delete the tag (git push origin :refs/tags/$TAG; git tag -d $TAG)"
 echo "release: done${DRAFT:+ (draft: review and publish it on GitHub)}"
