@@ -9,6 +9,7 @@ A [SimHub](https://www.simhubdash.com/) plugin that drives the LEDs of sim racin
 3. **Car proximity**: lights up when a car is next to you. When the sim reports the distance, more LEDs light up as the other car gets closer.
 4. **ABS indication**
 5. **Traction control indication**
+6. **Animations**: an idle animation while no game is running, an animation when you start or stop the engine, and one while the pit limiter is on.
 
 Wheels can also have illuminated **buttons, lights and dials** on the front plate. Each one has a static color and can show one of the effects above. Buttons and dials can also change color (or turn off) while you press the button or turn the dial.
 
@@ -66,7 +67,7 @@ msbuild FreeTheLights.sln -restore -p:Configuration=Release
 5. In SimHub, open the device's LED editor and add the **FreeTheLights** effect (Effects group) to the profile of each channel. Put it on top, then pick the FreeTheLights device and, for devices with several parts, the part for that channel. For LED flag (matrix) devices, use the FreeTheLights matrix effect and choose the matrix group.
 
    For devices from SimHub's list, the **SimHub setup** card on the device page shows for each part whether it is connected, and **Connect** sets it up for you: it creates FreeTheLights' own LED profile for the part (named like "FreeTheLights: My dash") and makes it the active profile. Profiles of your own or of other plugins are never changed; you can switch back to them in SimHub's LED editor at any time. SimHub's device settings are backed up to `PluginsData\Common\FreeTheLights\backups` first.
-6. Use the **Test** chips (RPM sweep, flags, car left/right, ABS, TC) to check the LEDs without driving. The live preview shows what the device displays.
+6. Use the **Test** chips (RPM sweep, flags, car left/right, ABS, TC, button press, pit limiter, engine start and stop, idle) to check the LEDs without driving. The live preview shows what the device displays.
 
 Your settings are kept when you update FreeTheLights: settings saved by an older version are migrated to the new format. A copy of the old settings is kept in `PluginsData\Common\FreeTheLights\backups` first.
 
@@ -112,6 +113,30 @@ Your settings are kept when you update FreeTheLights: settings saved by an older
 - **Default**: ABS in yellow, traction control in blue, on the vertical columns; blinking optional. Both colors can be changed.
 - **Hold**: activations are held for 100 ms, so single-frame reports don't flicker.
 
+### Animations
+
+- **Targets**: all rows, columns and matrices by default; any of them can be deselected. The **Buttons and dials** switch adds the front plate's buttons, lights and dials, which then play along as one line from the left of the wheel to the right.
+- **From the center**: runs the animation from the center outwards, the same on both sides.
+- **Idle**, while no game is running:
+  - *Breathing*: all LEDs fade in and out.
+  - *Running*: a light with a fading tail runs along the LEDs.
+  - *Oscillating*: a light with a fading tail runs back and forth.
+  - Colors: a fixed color, all LEDs cycling through the rainbow together, or a moving rainbow along the LEDs. Speed and tail length can be set.
+  - The idle animation pauses while a test chip is on; the **Idle** test chip shows it while a game is running.
+- **Engine start and stop**: one animation and color for each, played once for the chosen duration:
+  - *Sweep*: the LEDs fill up and empty again, like a gauge sweep (default for a start, in green).
+  - *Fill*: the LEDs fill up, then fade out.
+  - *Flash*: all LEDs flash three times.
+  - *Drain*: all LEDs light up and empty towards the start (default for a stop, in red).
+  - *Fade*: all LEDs light up and fade out.
+  - *Off*: no animation.
+  - Joining a session with the engine already running doesn't count as a start.
+- **Pit limiter**, while it is on, in two colors (the second can be left empty for dark):
+  - *Blink*: all LEDs switch between the two colors.
+  - *Alternate* (default): groups of neighboring LEDs swap the two colors. **LEDs together** sets how many LEDs light up together (1 = every other LED); 0 uses the two halves.
+  - *Scroll*: stripes of the two colors march along the LEDs.
+- **Updating**: devices added with an older version get all three animations on their rows, columns and matrices.
+
 ### Front plate
 
 - **Elements**: buttons, non-button lights and dials, one LED each.
@@ -137,7 +162,7 @@ Your settings are kept when you update FreeTheLights: settings saved by an older
 ### Priority
 
 - When features overlap on the same LED, the order on the Priority tab decides which one wins. Reorder it by drag & drop.
-- **Default order**: button press > Flags > Proximity > ABS > TC > RPM > static colors.
+- **Default order**: button press > Flags > Proximity > ABS > TC > pit limiter > engine start and stop > RPM > idle > static colors.
 
 ## SimHub properties
 
