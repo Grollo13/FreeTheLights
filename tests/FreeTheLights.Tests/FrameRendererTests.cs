@@ -393,5 +393,144 @@ namespace FreeTheLights.Tests
             var frame = FrameRenderer.Render(device, new TelemetrySnapshot { Rpm = 9500, Gear = "1" }, ThreeLedCar(), 0);
             Assert.All(Slice(frame, 15, 6), c => Assert.True(c.IsTransparent));
         }
+
+        // ---------- Idle animation ----------
+
+        private static readonly LedColor Red = LedColor.FromRgb(255, 0, 0);
+
+        /// <summary>A part with one row of ten LEDs and only the idle animation on.</summary>
+        private static DevicePart IdleRow(IdleAnimation animation)
+        {
+            var part = new DevicePart();
+            part.EnsureDefaults();
+            part.AddGroup(new LedGroup { Kind = LedGroupKind.HorizontalRow, Count = 10 });
+            foreach (var feature in part.Features) feature.Enabled = feature == part.Idle;
+            part.Idle.Animation = animation;
+            part.Idle.Color = "#FFFF0000";
+            part.Idle.PeriodMs = 1000;
+            part.Idle.TrailPercent = 30;
+            return part;
+        }
+
+        [Fact]
+        public void Idle_animation_plays_only_while_idle()
+        {
+            var part = IdleRow(IdleAnimation.Breathing);
+            Assert.All(FrameRenderer.Render(part, new TelemetrySnapshot(), null, 500), c => Assert.True(c.IsTransparent));
+
+            // Full at the middle of a breath, dim at its start.
+            var idle = new TelemetrySnapshot { Idle = true };
+            Assert.All(FrameRenderer.Render(part, idle, null, 500), c => Assert.Equal(Red, c));
+            Assert.All(FrameRenderer.Render(part, idle, null, 0), c => Assert.Equal(Red.Scale(FrameRenderer.BreathDim), c));
+        }
+
+        [Fact]
+        public void Running_light_has_a_fading_tail()
+        {
+            var part = IdleRow(IdleAnimation.Running);
+
+            // Halfway through the run the light is on LED 7 (index 6); the 30 % tail covers the two LEDs behind it.
+            var frame = FrameRenderer.Render(part, new TelemetrySnapshot { Idle = true }, null, 500);
+            Assert.Equal(new[] { LedColor.Off, LedColor.Off, LedColor.Off, LedColor.Off, Red.Scale(1 / 3.0), Red.Scale(2 / 3.0), Red, LedColor.Off, LedColor.Off, LedColor.Off }, frame);
+        }
+
+        [Fact]
+        public void Oscillating_light_turns_around()
+        {
+            var part = IdleRow(IdleAnimation.Oscillating);
+
+            // On the way back (second period) the tail follows on the right.
+            var frame = FrameRenderer.Render(part, new TelemetrySnapshot { Idle = true }, null, 1550);
+            Assert.Equal(LedColor.Off, frame[3]);
+            Assert.Equal(Red, frame[4]);
+            Assert.Equal(Red.Scale(2 / 3.0), frame[5]);
+            Assert.Equal(Red.Scale(1 / 3.0), frame[6]);
+            Assert.Equal(LedColor.Off, frame[7]);
+        }
+
+        [Fact]
+        public void Mirrored_animations_are_symmetric()
+        {
+            var part = IdleRow(IdleAnimation.Running);
+            part.Idle.Mirror = true;
+            for (var now = 0; now < 1000; now += 50)
+            {
+                var frame = FrameRenderer.Render(part, new TelemetrySnapshot { Idle = true }, null, now);
+                Assert.Equal(frame, frame.Reverse());
+            }
+
+            // Early in the run only the center is lit.
+            var start = FrameRenderer.Render(part, new TelemetrySnapshot { Idle = true }, null, 100);
+            Assert.False(start[4].Equals(LedColor.Off));
+            Assert.Equal(LedColor.Off, start[0]);
+        }
+
+        [Fact]
+        public void Changing_colors_cycle_together_or_spread_as_a_rainbow()
+        {
+            var part = IdleRow(IdleAnimation.Breathing);
+            var idle = new TelemetrySnapshot { Idle = true };
+
+            part.Idle.ColorMode = AnimationColorMode.Cycle;
+            var cycle = FrameRenderer.Render(part, idle, null, 500);
+            Assert.All(cycle, c => Assert.Equal(LedColor.FromHue(500.0 / Animations.HueCycleMs), c));
+
+            part.Idle.ColorMode = AnimationColorMode.Rainbow;
+            var rainbow = FrameRenderer.Render(part, idle, null, 500);
+            Assert.Equal(10, rainbow.Distinct().Count());
+        }
+
+        [Fact]
+        public void Front_plate_elements_play_along_from_left_to_right()
+        {
+            var part = new DevicePart();
+            part.EnsureDefaults();
+            part.ApplyFrontPlate("1", "1x2");
+            foreach (var feature in part.Features) feature.Enabled = feature == part.Idle;
+            part.Idle.Animation = IdleAnimation.Running;
+            part.Idle.PeriodMs = 1000;
+            part.Idle.TrailPercent = 1;
+            var idle = new TelemetrySnapshot { Idle = true };
+            var left = part.Elements.Where(e => e.Side == LedGroupSide.Left).Select(e => e.StartIndex).ToList();
+            var right = part.Elements.Where(e => e.Side == LedGroupSide.Right).Select(e => e.StartIndex).ToList();
+            Assert.NotEmpty(left);
+            Assert.NotEmpty(right);
+
+            var early = FrameRenderer.Render(part, idle, null, 150);
+            Assert.All(left, i => Assert.NotEqual(LedColor.Off, early[i]));
+            Assert.All(right, i => Assert.Equal(LedColor.Off, early[i]));
+
+            var late = FrameRenderer.Render(part, idle, null, 750);
+            Assert.All(left, i => Assert.Equal(LedColor.Off, late[i]));
+            Assert.All(right, i => Assert.NotEqual(LedColor.Off, late[i]));
+
+            part.Idle.IncludeElements = false;
+            Assert.All(FrameRenderer.Render(part, idle, null, 150), c => Assert.True(c.IsTransparent));
+        }
+
+        [Fact]
+        public void Idle_is_when_no_game_runs_and_no_other_test_is_on()
+        {
+            var tests = new TestMode();
+            var noGame = new TelemetrySnapshot();
+            tests.Apply(noGame, null, 0);
+            Assert.True(noGame.Idle);
+
+            var game = new TelemetrySnapshot { GameRunning = true };
+            tests.Apply(game, null, 0);
+            Assert.False(game.Idle);
+
+            tests.Yellow = true;
+            var testing = new TelemetrySnapshot();
+            tests.Apply(testing, null, 0);
+            Assert.False(testing.Idle);
+
+            tests.Clear();
+            tests.Idle = true;
+            Assert.True(tests.AnyActive);
+            var forced = new TelemetrySnapshot { GameRunning = true };
+            tests.Apply(forced, null, 0);
+            Assert.True(forced.Idle);
+        }
     }
 }

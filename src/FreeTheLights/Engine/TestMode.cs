@@ -25,6 +25,7 @@ namespace FreeTheLights.Engine
         private bool tc;
         private bool rpmSweep;
         private bool press;
+        private bool idle;
 
         /// <summary>The part showing the wiring test pattern (boxed Guid, swapped atomically: the game loop reads it).</summary>
         private volatile object wiringPart = Guid.Empty;
@@ -52,6 +53,9 @@ namespace FreeTheLights.Engine
 
         /// <summary>Every front plate element with a press color shows it, as if its button were held.</summary>
         public bool Press { get => press; set => Set(ref press, value); }
+
+        /// <summary>The idle animation shows, also while a game runs.</summary>
+        public bool Idle { get => idle; set => Set(ref idle, value); }
 
         /// <summary>
         /// The part that shows <see cref="WiringPattern"/> instead of its features, on the device and in the preview;
@@ -85,12 +89,14 @@ namespace FreeTheLights.Engine
             }
         }
 
-        public bool AnyActive => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press
-                                 || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
+        public bool AnyActive => AnyFeatureTest || Idle || WiringPartId != Guid.Empty || ConfirmationDeviceId != Guid.Empty;
+
+        /// <summary>A test of a game feature is on: the idle animation then gives way, so it doesn't hide the test.</summary>
+        private bool AnyFeatureTest => Yellow || Blue || White || Checkered || Black || Green || Debris || Meatball || CarLeft || CarRight || Abs || Tc || RpmSweep || Press;
 
         public void Clear()
         {
-            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = false;
+            Yellow = Blue = White = Checkered = Black = Green = Debris = Meatball = CarLeft = CarRight = Abs = Tc = RpmSweep = Press = Idle = false;
             WiringPartId = Guid.Empty;
             ConfirmationDeviceId = Guid.Empty;
         }
@@ -108,6 +114,7 @@ namespace FreeTheLights.Engine
             t.AbsActive |= Abs;
             t.TcActive |= Tc;
             t.SimulatePress |= Press;
+            t.Idle = Idle || (!t.GameRunning && !AnyFeatureTest);
 
             if (CarLeft)
             {

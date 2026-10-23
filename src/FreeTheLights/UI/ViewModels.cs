@@ -198,10 +198,14 @@ namespace FreeTheLights.UI
         public ObservableCollection<TargetOption> ProximityTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> AbsTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<TargetOption> TcTargets { get; } = new ObservableCollection<TargetOption>();
+        public ObservableCollection<TargetOption> IdleTargets { get; } = new ObservableCollection<TargetOption>();
         public ObservableCollection<LayerItem> Layers { get; } = new ObservableCollection<LayerItem>();
 
         /// <summary>The part has a row of LEDs, the only kind RPM lights can use (else the RPM tab is hidden).</summary>
         public bool HasRpmTargets => RpmTargets.Count > 0;
+
+        /// <summary>The part has front plate elements (buttons, lights, dials): the animation tabs offer to include them.</summary>
+        public bool HasElements => Part.Elements.Any();
 
         /// <summary>One line under the device name, e.g. "31 LEDs · 3 LED groups · 10 front plate elements".</summary>
         public string HeaderSummary
@@ -342,6 +346,7 @@ namespace FreeTheLights.UI
                 case LayerKind.Proximity: return ProximityTargets;
                 case LayerKind.Abs: return AbsTargets;
                 case LayerKind.TractionControl: return TcTargets;
+                case LayerKind.Idle: return IdleTargets;
                 default: return null;
             }
         }
@@ -355,6 +360,7 @@ namespace FreeTheLights.UI
             }
 
             OnPropertyChanged(nameof(HasRpmTargets));
+            OnPropertyChanged(nameof(HasElements));
         }
 
         private void Fill(ObservableCollection<TargetOption> options, FeatureSettingsBase feature)
@@ -672,6 +678,8 @@ namespace FreeTheLights.UI
         public Array GroupSides => Enum.GetValues(typeof(LedGroupSide));
         public Array FallbackModes => Enum.GetValues(typeof(RpmFallbackMode));
         public Array FillOrigins => Enum.GetValues(typeof(FillOrigin));
+        public Array IdleAnimations => Enum.GetValues(typeof(IdleAnimation));
+        public Array AnimationColorModes => Enum.GetValues(typeof(AnimationColorMode));
 
         /// <summary>Called periodically by the view to refresh status texts.</summary>
         public void RefreshStatus()

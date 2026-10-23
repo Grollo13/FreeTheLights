@@ -33,7 +33,7 @@ namespace FreeTheLights.Settings
         [JsonIgnore]
         public abstract LedGroupKind[] DefaultKinds { get; }
 
-        public bool Targets(LedGroup group) => TargetGroupIds.Contains(group.Id) && AllowedKinds.Contains(group.Kind);
+        public virtual bool Targets(LedGroup group) => TargetGroupIds.Contains(group.Id) && AllowedKinds.Contains(group.Kind);
     }
 
     /// <summary>What the RPM lights show without car data. Values are explicit because they are stored in the settings; never renumber them.</summary>
@@ -332,5 +332,78 @@ namespace FreeTheLights.Settings
         public override LedGroupKind[] AllowedKinds => ElementKinds;
 
         public override LedGroupKind[] DefaultKinds => ElementKinds;
+    }
+
+    /// <summary>
+    /// Common part of the animations (idle, engine, pit limiter). They drive the rows, columns and matrices in their
+    /// targets and, with <see cref="IncludeElements"/>, every front plate element. They aren't one of an element's
+    /// effects (<see cref="DevicePart.ElementEffects"/>): like the press colors, they only show at certain moments.
+    /// </summary>
+    public abstract class AnimationSettingsBase : FeatureSettingsBase
+    {
+        private static readonly LedGroupKind[] LedKinds = { LedGroupKind.HorizontalRow, LedGroupKind.VerticalColumn, LedGroupKind.Matrix };
+
+        private bool includeElements = true;
+        private bool mirror;
+
+        public override LedGroupKind[] AllowedKinds => LedKinds;
+
+        public override LedGroupKind[] DefaultKinds => LedKinds;
+
+        /// <summary>The front plate elements (buttons, lights, dials) show the animation too.</summary>
+        public bool IncludeElements { get => includeElements; set => Set(ref includeElements, value); }
+
+        /// <summary>Animations run from the center outwards, the same on both sides.</summary>
+        public bool Mirror { get => mirror; set => Set(ref mirror, value); }
+
+        public override bool Targets(LedGroup group) => group.IsElement ? IncludeElements : base.Targets(group);
+    }
+
+    /// <summary>What the LEDs show while no game runs. Values are explicit because they are stored in the settings; never renumber them.</summary>
+    public enum IdleAnimation
+    {
+        /// <summary>All LEDs fade in and out together.</summary>
+        Breathing = 0,
+
+        /// <summary>A light with a fading tail runs along the LEDs and starts over.</summary>
+        Running = 1,
+
+        /// <summary>A light with a fading tail runs back and forth.</summary>
+        Oscillating = 2,
+    }
+
+    /// <summary>How an animation's color changes. Values are explicit because they are stored in the settings; never renumber them.</summary>
+    public enum AnimationColorMode
+    {
+        /// <summary>The chosen color.</summary>
+        Fixed = 0,
+
+        /// <summary>All LEDs change color together, through the rainbow.</summary>
+        Cycle = 1,
+
+        /// <summary>A rainbow along the LEDs that moves.</summary>
+        Rainbow = 2,
+    }
+
+    /// <summary>The idle animation, shown while no game runs.</summary>
+    public class IdleSettings : AnimationSettingsBase
+    {
+        private IdleAnimation animation = IdleAnimation.Running;
+        private string color = "#FF0080FF";
+        private AnimationColorMode colorMode = AnimationColorMode.Fixed;
+        private int periodMs = 3000;
+        private int trailPercent = 30;
+
+        public IdleAnimation Animation { get => animation; set => Set(ref animation, value); }
+
+        public string Color { get => color; set => Set(ref color, value); }
+
+        public AnimationColorMode ColorMode { get => colorMode; set => Set(ref colorMode, value); }
+
+        /// <summary>Duration of one breath, or of one run along the LEDs (oscillating: one way).</summary>
+        public int PeriodMs { get => periodMs; set => Set(ref periodMs, Math.Max(300, Math.Min(20000, value))); }
+
+        /// <summary>Length of the running light's tail, in percent of the LEDs.</summary>
+        public int TrailPercent { get => trailPercent; set => Set(ref trailPercent, Math.Max(1, Math.Min(100, value))); }
     }
 }

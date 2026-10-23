@@ -93,7 +93,7 @@ namespace FreeTheLights.Tests
             var device = JsonConvert.DeserializeObject<DevicePart>(@"{ ""LayerPriority"": [4, 0, 1, 5, 2, 3] }");
             device.EnsureDefaults();
 
-            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Flags, LayerKind.Proximity, LayerKind.StaticColor, LayerKind.Abs, LayerKind.TractionControl }, device.LayerPriority.ToArray());
+            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Idle, LayerKind.Flags, LayerKind.Proximity, LayerKind.StaticColor, LayerKind.Abs, LayerKind.TractionControl }, device.LayerPriority.ToArray());
         }
 
         [Fact]
@@ -204,6 +204,13 @@ namespace FreeTheLights.Tests
         [InlineData(typeof(LayerKind), "Rpm", 4)]
         [InlineData(typeof(LayerKind), "StaticColor", 5)]
         [InlineData(typeof(LayerKind), "Press", 6)]
+        [InlineData(typeof(LayerKind), "Idle", 7)]
+        [InlineData(typeof(IdleAnimation), "Breathing", 0)]
+        [InlineData(typeof(IdleAnimation), "Running", 1)]
+        [InlineData(typeof(IdleAnimation), "Oscillating", 2)]
+        [InlineData(typeof(AnimationColorMode), "Fixed", 0)]
+        [InlineData(typeof(AnimationColorMode), "Cycle", 1)]
+        [InlineData(typeof(AnimationColorMode), "Rainbow", 2)]
         [InlineData(typeof(LedGroupKind), "HorizontalRow", 0)]
         [InlineData(typeof(LedGroupKind), "VerticalColumn", 1)]
         [InlineData(typeof(LedGroupKind), "Matrix", 2)]
@@ -242,8 +249,8 @@ namespace FreeTheLights.Tests
         public void Every_persisted_enum_member_is_pinned()
         {
             // A new member needs a row in Persisted_enum_values_never_change, with a new number.
-            var types = new[] { typeof(LayerKind), typeof(LedGroupKind), typeof(ElementType), typeof(LedGroupSide), typeof(RpmFallbackMode), typeof(FlagKind), typeof(FlagPattern), typeof(FlagAnimation), typeof(FillOrigin), typeof(LedChannel), typeof(DeviceType), typeof(PhotoLedSource) };
-            Assert.Equal(49, types.Sum(t => Enum.GetValues(t).Length));
+            var types = new[] { typeof(LayerKind), typeof(LedGroupKind), typeof(ElementType), typeof(LedGroupSide), typeof(RpmFallbackMode), typeof(FlagKind), typeof(FlagPattern), typeof(FlagAnimation), typeof(FillOrigin), typeof(LedChannel), typeof(DeviceType), typeof(PhotoLedSource), typeof(IdleAnimation), typeof(AnimationColorMode) };
+            Assert.Equal(56, types.Sum(t => Enum.GetValues(t).Length));
         }
 
         [Fact]

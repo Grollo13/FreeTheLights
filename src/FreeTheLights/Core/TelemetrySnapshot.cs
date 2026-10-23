@@ -7,6 +7,10 @@ namespace FreeTheLights.Core
     public class TelemetrySnapshot
     {
         public bool GameRunning { get; set; }
+
+        /// <summary>The idle animation shows: no game runs (and no test is on), or the idle test is on.</summary>
+        public bool Idle { get; set; }
+
         public string GameName { get; set; }
         public string CarId { get; set; }
         public string CarModel { get; set; }

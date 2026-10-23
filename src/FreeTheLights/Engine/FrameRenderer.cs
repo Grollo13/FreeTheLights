@@ -67,6 +67,7 @@ namespace FreeTheLights.Engine
             [LayerKind.TractionControl] = (d, g, l, t, p, now) => RenderIndicator(d.TractionControl, t.TcActive, g, l, now),
             [LayerKind.StaticColor] = (d, g, l, t, p, now) => RenderStaticColor(g, l),
             [LayerKind.Press] = (d, g, l, t, p, now) => RenderPress(g, l, t, now),
+            [LayerKind.Idle] = (d, g, l, t, p, now) => RenderIdle(d, d.Idle, g, l, t, now),
         };
 
         /// <summary>Whether the renderer draws <paramref name="kind"/>'s layer; a feature without a renderer stays dark.</summary>
@@ -343,6 +344,67 @@ namespace FreeTheLights.Engine
             }
 
             return false;
+        }
+
+        // ---------- Idle animation ----------
+
+        /// <summary>Darkest point of a breath.</summary>
+        public const double BreathDim = 0.05;
+
+        public static void RenderIdle(DevicePart part, IdleSettings settings, LedGroup group, LedColor[] layer, TelemetrySnapshot t, long nowMs)
+        {
+            if (!t.Idle) return;
+            var sampler = new IdleSampler
+            {
+                Animation = settings.Animation,
+                Color = LedColor.ParseCached(settings.Color),
+                ColorMode = settings.ColorMode,
+                NowMs = nowMs,
+                PeriodMs = settings.PeriodMs,
+                Trail = settings.TrailPercent / 100.0,
+            };
+            Animations.Paint(part, group, layer, settings.Mirror, ref sampler);
+        }
+
+        private struct IdleSampler : Animations.ISampler
+        {
+            public IdleAnimation Animation;
+            public LedColor Color;
+            public AnimationColorMode ColorMode;
+            public long NowMs;
+            public int PeriodMs;
+            public double Trail;
+
+            public LedColor Sample(double position, double step)
+            {
+                double brightness;
+                switch (Animation)
+                {
+                    case IdleAnimation.Running:
+                    {
+                        // The light enters before the first LED and runs on until its tail has left the last one.
+                        var head = -step / 2 + Animations.Phase(NowMs, PeriodMs) * (1 + Math.Max(Trail, step) + step);
+                        brightness = Animations.Tail(head - position, Trail, step);
+                        break;
+                    }
+
+                    case IdleAnimation.Oscillating:
+                    {
+                        // One way per period, then back; the tail follows the light.
+                        var phase = Animations.Phase(NowMs, 2 * PeriodMs) * 2;
+                        var forward = phase < 1;
+                        var head = forward ? phase : 2 - phase;
+                        brightness = Animations.Tail(forward ? head - position : position - head, Trail, step);
+                        break;
+                    }
+
+                    default:
+                        brightness = Animations.Breath(Animations.Phase(NowMs, PeriodMs), BreathDim);
+                        break;
+                }
+
+                return Animations.Shade(Animations.ColorAt(Color, ColorMode, position, NowMs), brightness);
+            }
         }
     }
 }

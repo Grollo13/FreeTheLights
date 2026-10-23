@@ -20,6 +20,7 @@ namespace FreeTheLights.UI
         public static readonly SolidColorBrush TractionControl = Make(0xBA, 0x68, 0xC8);
         public static readonly SolidColorBrush StaticColor = Make(0xB0, 0xBE, 0xC5);
         public static readonly SolidColorBrush Press = Make(0x4D, 0xD0, 0xE1);
+        public static readonly SolidColorBrush IdleLights = Make(0x95, 0x75, 0xCD);
         public static readonly SolidColorBrush Priority = Make(0x90, 0xA4, 0xAE);
         public static readonly SolidColorBrush Neutral = Make(0x90, 0xA4, 0xAE);
 
@@ -42,6 +43,7 @@ namespace FreeTheLights.UI
                 case LayerKind.TractionControl: return TractionControl;
                 case LayerKind.StaticColor: return StaticColor;
                 case LayerKind.Press: return Press;
+                case LayerKind.Idle: return IdleLights;
                 default: return Neutral;
             }
         }

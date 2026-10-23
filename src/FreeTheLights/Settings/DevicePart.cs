@@ -21,6 +21,9 @@ namespace FreeTheLights.Settings
 
         /// <summary>Front plate elements whose button is pressed or dial turned (the highest layer by default).</summary>
         Press = 6,
+
+        /// <summary>The idle animation, while no game runs.</summary>
+        Idle = 7,
     }
 
     /// <summary>
@@ -108,6 +111,9 @@ namespace FreeTheLights.Settings
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public PressSettings Press { get; set; } = new PressSettings();
 
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+        public IdleSettings Idle { get; set; } = new IdleSettings();
+
         /// <summary>Which presets the front plate elements were created from (see <see cref="ApplyFrontPlate"/>).</summary>
         [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public FrontPlateLayout FrontPlate { get; set; } = new FrontPlateLayout();
@@ -125,6 +131,7 @@ namespace FreeTheLights.Settings
             new FeatureInfo(LayerKind.Abs, "ABS", d => d.Abs),
             new FeatureInfo(LayerKind.TractionControl, "Traction control", d => d.TractionControl),
             new FeatureInfo(LayerKind.Rpm, "RPM", d => d.Rpm),
+            new FeatureInfo(LayerKind.Idle, "Idle", d => d.Idle),
             new FeatureInfo(LayerKind.StaticColor, "Static colors", d => d.StaticColors),
         };
 
@@ -197,6 +204,9 @@ namespace FreeTheLights.Settings
             if (TractionControl == null) TractionControl = new IndicatorSettings(IndicatorSettings.TractionControlDefaultColor);
             if (StaticColors == null) StaticColors = new StaticColorSettings();
             if (Press == null) Press = new PressSettings();
+            if (Idle == null) Idle = new IdleSettings();
+            if (!Enum.IsDefined(typeof(IdleAnimation), Idle.Animation)) Idle.Animation = IdleAnimation.Running;
+            if (!Enum.IsDefined(typeof(AnimationColorMode), Idle.ColorMode)) Idle.ColorMode = AnimationColorMode.Fixed;
             if (FrontPlate == null) FrontPlate = new FrontPlateLayout();
             foreach (var feature in Features)
             {

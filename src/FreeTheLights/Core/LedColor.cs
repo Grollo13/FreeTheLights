@@ -30,6 +30,25 @@ namespace FreeTheLights.Core
 
         public static LedColor FromRgb(byte r, byte g, byte b) => new LedColor(255, r, g, b);
 
+        /// <summary>The fully saturated, full brightness color of <paramref name="hue"/> (0..1 = red → green → blue → red; wraps).</summary>
+        public static LedColor FromHue(double hue)
+        {
+            var h = (hue - Math.Floor(hue)) * 6;
+            var sector = (int)h % 6;
+            var f = h - Math.Floor(h);
+            var up = (byte)Math.Round(255 * f);
+            var down = (byte)Math.Round(255 * (1 - f));
+            switch (sector)
+            {
+                case 0: return FromRgb(255, up, 0);
+                case 1: return FromRgb(down, 255, 0);
+                case 2: return FromRgb(0, 255, up);
+                case 3: return FromRgb(0, down, 255);
+                case 4: return FromRgb(up, 0, 255);
+                default: return FromRgb(255, 0, down);
+            }
+        }
+
         /// <summary>
         /// Scales the color channels by <paramref name="factor"/> (0..1).
         /// </summary>
