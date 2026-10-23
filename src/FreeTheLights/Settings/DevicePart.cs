@@ -215,11 +215,21 @@ namespace FreeTheLights.Settings
                 while (LayerPriority.Count(l => l == duplicate) > 1) LayerPriority.Remove(duplicate);
             }
 
-            // Missing layers are added last, except the press layer: the driver's own input wins over everything.
-            if (!LayerPriority.Contains(LayerKind.Press)) LayerPriority.Insert(0, LayerKind.Press);
-            foreach (var feature in AllFeatures)
+            // Missing layers (features added by an update) go to their default position: right after the layer that
+            // precedes them in AllFeatures, or first. Appending them would put them under the static colors.
+            for (var f = 0; f < AllFeatures.Length; f++)
             {
-                if (!LayerPriority.Contains(feature.Kind)) LayerPriority.Add(feature.Kind);
+                if (LayerPriority.Contains(AllFeatures[f].Kind)) continue;
+                var at = 0;
+                for (var before = f - 1; before >= 0; before--)
+                {
+                    var index = LayerPriority.IndexOf(AllFeatures[before].Kind);
+                    if (index < 0) continue;
+                    at = index + 1;
+                    break;
+                }
+
+                LayerPriority.Insert(at, AllFeatures[f].Kind);
             }
         }
 

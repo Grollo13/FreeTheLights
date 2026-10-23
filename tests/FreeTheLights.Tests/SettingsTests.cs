@@ -83,10 +83,17 @@ namespace FreeTheLights.Tests
 
             Assert.NotNull(device.Flags);
             Assert.Equal(FlagSettings.DefaultOrder.Length, device.Flags.Rules.Count);
-            Assert.Equal(LayerKind.Press, device.LayerPriority[0]);
-            Assert.Equal(LayerKind.Rpm, device.LayerPriority[1]);
-            Assert.Equal(7, device.LayerPriority.Count);
-            Assert.Equal(LayerKind.StaticColor, device.LayerPriority.Last());
+            Assert.Equal(DevicePart.AllFeatures.Select(f => f.Kind), device.LayerPriority);
+        }
+
+        [Fact]
+        public void Missing_layers_are_inserted_at_their_default_position()
+        {
+            // The user moved RPM first and the static colors above ABS; the missing layers go after their predecessor.
+            var device = JsonConvert.DeserializeObject<DevicePart>(@"{ ""LayerPriority"": [4, 0, 1, 5, 2, 3] }");
+            device.EnsureDefaults();
+
+            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Flags, LayerKind.Proximity, LayerKind.StaticColor, LayerKind.Abs, LayerKind.TractionControl }, device.LayerPriority.ToArray());
         }
 
         [Fact]
@@ -270,7 +277,7 @@ namespace FreeTheLights.Tests
             var loaded = JsonConvert.DeserializeObject<DevicePart>(@"{ ""LayerPriority"": [99, 4] }");
             loaded.EnsureDefaults();
 
-            Assert.Equal(new[] { LayerKind.Press, LayerKind.Rpm, LayerKind.Flags, LayerKind.Proximity, LayerKind.Abs, LayerKind.TractionControl, LayerKind.StaticColor }, loaded.LayerPriority.ToArray());
+            Assert.Equal(DevicePart.AllFeatures.Select(f => f.Kind), loaded.LayerPriority);
             Assert.Null(new DevicePart().GetFeature((LayerKind)99));
         }
 
