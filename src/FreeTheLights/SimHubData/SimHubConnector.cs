@@ -87,7 +87,7 @@ namespace FreeTheLights.SimHubData
                 {
                     var original = (JObject)settings.DeepClone();
                     if (SimHubProfiles.Connect(settings, device, part) == null || JToken.DeepEquals(settings, original)) continue;
-                    instance.SetSettings(settings, false);
+                    Apply(instance, settings);
                     applied.Add((instance, original));
                 }
             }
@@ -98,7 +98,7 @@ namespace FreeTheLights.SimHubData
                 {
                     try
                     {
-                        instance.SetSettings(original, false);
+                        Apply(instance, original);
                     }
                     catch (Exception)
                     {
@@ -121,7 +121,7 @@ namespace FreeTheLights.SimHubData
         public static ProfileOwner FindOwner(PluginManager pluginManager, Guid profileId)
         {
             if (pluginManager == null || profileId == Guid.Empty) return null;
-            foreach (var instance in pluginManager.GetPlugin<DevicesPlugin>()?.GetDevices() ?? Enumerable.Empty<DeviceInstance>())
+            foreach (var instance in Devices(pluginManager) ?? Enumerable.Empty<DeviceInstance>())
             {
                 var channel = SimHubProfiles.ChannelOfProfile(instance?.GetSettings(false, false) as JObject, profileId);
                 if (channel.HasValue) return new ProfileOwner(instance.DeviceDescriptor?.DeviceTypeID?.Trim(), instance.MainDisplayName ?? instance.DeviceDescriptor?.Name, channel.Value);
@@ -143,10 +143,32 @@ namespace FreeTheLights.SimHubData
                 .ToList();
         }
 
-        /// <summary>Gives SimHub's devices back the settings of <paramref name="copies"/> (see <see cref="Copy"/>).</summary>
+        /// <summary>
+        /// Gives SimHub's devices back the LED settings of <paramref name="copies"/> (see <see cref="Copy"/>). A
+        /// composite device's other components (its display) keep their current settings.
+        /// </summary>
         public static void Restore(IEnumerable<DeviceSettingsCopy> copies)
         {
-            foreach (var copy in copies) copy.Instance.SetSettings(copy.Settings, false);
+            foreach (var copy in copies) Apply(copy.Instance, copy.Settings);
+        }
+
+        /// <summary>
+        /// Hands <paramref name="settings"/> (in the shape GetSettings returns) to SimHub: a composite device only to its
+        /// LED component (<see cref="SimHubProfiles.LedComponent"/>), since setting the whole device would append its
+        /// display's lists to the ones it has.
+        /// </summary>
+        private static void Apply(DeviceInstance instance, JObject settings)
+        {
+            if (!(instance is CompositeDeviceInstance composite))
+            {
+                instance.SetSettings(settings, false);
+                return;
+            }
+
+            var key = SimHubProfiles.LedComponent(settings);
+            var component = key == null ? null : composite.Devices?.FirstOrDefault(d => d.CompositeCode == key);
+            if (component == null) throw new InvalidOperationException($"The {instance.MainDisplayName} has no LED component to set up.");
+            component.SetSettings(settings[key], false);
         }
 
         /// <summary>Whether a device of this SimHub type is added in SimHub's Devices (false when the list isn't available).</summary>
@@ -158,10 +180,18 @@ namespace FreeTheLights.SimHubData
         private static List<DeviceInstance> Instances(PluginManager pluginManager, string deviceTypeId)
         {
             if (pluginManager == null || deviceTypeId == null) return null;
-            var devices = pluginManager.GetPlugin<DevicesPlugin>()?.GetDevices();
+            var devices = Devices(pluginManager);
             if (devices == null) return null;
-            return devices.Where(d => string.Equals(d?.DeviceDescriptor?.DeviceTypeID?.Trim(), deviceTypeId, StringComparison.OrdinalIgnoreCase)).ToList();
+            return devices.Where(d => string.Equals(d.DeviceDescriptor?.DeviceTypeID?.Trim(), deviceTypeId, StringComparison.OrdinalIgnoreCase)).ToList();
         }
+
+        /// <summary>
+        /// The devices added in SimHub's Devices; null when the list isn't available. DevicesPlugin.GetDevices also lists
+        /// the components of a composite device (a dashboard's LEDs and display), with the dashboard's device type: they
+        /// are left out, since setting a display's settings appends to its lists (see <see cref="Apply"/>).
+        /// </summary>
+        private static IEnumerable<DeviceInstance> Devices(PluginManager pluginManager) =>
+            pluginManager?.GetPlugin<DevicesPlugin>()?.GetDevices()?.Where(d => d != null && d.RootInstance == d);
     }
 }
 

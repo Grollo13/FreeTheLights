@@ -212,8 +212,18 @@ namespace FreeTheLights.Settings
         private static JObject LedRoot(JObject deviceSettings)
         {
             var settings = deviceSettings?["Settings"] as JObject ?? deviceSettings;
-            return settings?["LEDS"] as JObject ?? settings;
+            return settings?[LedComponentKey] as JObject ?? settings;
         }
+
+        private const string LedComponentKey = "LEDS";
+
+        /// <summary>
+        /// The component of a composite device that holds its LED channels, in the settings DeviceInstance.GetSettings
+        /// returns ({ "LEDS": ..., "LCD": ... }: "LEDS"); null for a device that isn't composite ({ "buttons": ... }).
+        /// Settings for SimHub go to this component only: SimHub merges a display's settings into the ones it has, which
+        /// appends to every list there (the dash playlist's shortcuts doubled with each write).
+        /// </summary>
+        public static string LedComponent(JObject runtimeSettings) => runtimeSettings?[LedComponentKey] is JObject ? LedComponentKey : null;
 
         /// <summary>The settings key of a channel ("leds", "buttons", ...).</summary>
         public static string ChannelKey(LedChannel channel)

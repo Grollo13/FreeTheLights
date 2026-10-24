@@ -304,6 +304,20 @@ namespace FreeTheLights.Tests
             Assert.Null(SimHubProfiles.ActiveProfile(wheelRuntime, LedChannel.Leds));
         }
 
+        [Fact]
+        public void Only_the_led_component_of_a_composite_device_is_handed_to_simhub()
+        {
+            // SimHub merges a display's settings into the ones it has and appends to its lists: setting a whole
+            // dashboard doubled its dash playlist's shortcuts with each Connect and undo.
+            var dash = Newtonsoft.Json.Linq.JObject.Parse(@"{ ""LEDS"": { ""leds"": { ""Profiles"": [] } },
+                ""LCD"": { ""display"": { ""DashPlaylistSettings"": { ""DashShortcuts"": [ { ""DashboardSelection"": ""Lovely Dashboard"" } ] } } } }");
+            var wheel = Newtonsoft.Json.Linq.JObject.Parse(@"{ ""buttons"": { ""Profiles"": [] } }");
+
+            Assert.Equal("LEDS", SimHubProfiles.LedComponent(dash));
+            Assert.Null(SimHubProfiles.LedComponent(wheel));
+            Assert.Null(SimHubProfiles.LedComponent(null));
+        }
+
         /// <summary>Runtime settings of a dashboard whose active profile belongs to someone else (another plugin's effects, a game binding).</summary>
         private static Newtonsoft.Json.Linq.JObject ForeignProfileSettings(string activeId = "21a3d50e-830f-428d-91b9-0e03fbb21473") => Newtonsoft.Json.Linq.JObject.Parse(
             @"{ ""LEDS"": { ""leds"": { ""activeProfileId"": " + (activeId == null ? "null" : @"""" + activeId + @"""") + @", ""Profiles"": [
